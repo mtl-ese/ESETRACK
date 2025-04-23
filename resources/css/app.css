@@ -1,0 +1,55 @@
+/* Import Bootstrap CSS */
+@import "bootstrap/dist/css/bootstrap.min.css";
+
+/* Custom styles */
+body {
+    opacity: 1;
+    transition: opacity 0.2s ease-in-out;
+}
+
+.navbar {
+    background-color: #343a40;
+}
+
+#example1 {
+    border: 1px solid #ddd !important;
+    border-radius: 8px !important;
+    overflow: hidden !important;
+}
+
+.dataTables_wrapper {
+    padding: 15px !important;
+    background: #fff !important;
+    border-radius: 10px !important;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1) !important;
+}
+
+table.dataTable thead {
+    background: #007bff !important;
+    color: #fff !important;
+    font-weight: bold !important;
+}
+
+table.dataTable tbody tr:nth-child(odd) {
+    background: #f8f9fa !important;
+}
+
+.dataTables_paginate {
+    float: right !important;
+}
+
+.dataTables_info {
+    float: left !important;
+}
+
+.dataTables_length {
+    float: left !important;
+}
+
+.dataTables_filter {
+    float: right !important;
+}
+
+.dt-buttons {
+    float: left !important;
+}

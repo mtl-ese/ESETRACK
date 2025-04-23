@@ -1,0 +1,1 @@
+<div class="card-body text-center p-4">{{$slot}}</div>
