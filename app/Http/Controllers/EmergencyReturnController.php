@@ -52,5 +52,8 @@ class EmergencyReturnController extends Controller
             'items' => $identity->items
         ]);
     }
-    public function confirm($requisition_id) {}
+    public function confirm($requisition_id)
+    {
+        dd();
+    }
 }
