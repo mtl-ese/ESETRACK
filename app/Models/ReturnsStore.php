@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ReturnsStore extends Model
 {
     protected $fillable = [
+        'id',
         'item_name',
         'quantity',
     ];

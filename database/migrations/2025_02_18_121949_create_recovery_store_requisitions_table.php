@@ -14,12 +14,12 @@ return new class extends Migration
         Schema::create('recovery_store_requisitions', function (Blueprint $table) {
             $table->string('recovery_store_requisition_id')->primary();
             $table->string('client_name');
-            $table->string('location');
+            $table->string('location')->nullable();
             $table->date('requested_on');
             $table->unsignedBigInteger('created_by');
             $table->string('approved_by');
             $table->timestamps();
-            
+
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
         });
     }

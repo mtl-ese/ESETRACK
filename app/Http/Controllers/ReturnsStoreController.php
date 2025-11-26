@@ -9,7 +9,7 @@ class ReturnsStoreController extends Controller
 {
     public function index()
     {
-        $items = ReturnsStore::all();
+        $items = ReturnsStore::with('serial_numbers')->get();
 
         return view('return.index', [
             'items' => $items
@@ -30,5 +30,4 @@ class ReturnsStoreController extends Controller
             ]);
         }
     }
-
 }

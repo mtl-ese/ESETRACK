@@ -15,19 +15,20 @@
 
       <div class="mb-3">
         <label for="client" class="form-label"><strong>Client name</strong></label>
-        <input type="text" class="form-control" id="client" name="client" placeholder="Enter client name" required>
+        <input type="text" class="form-control" id="client" name="client" placeholder="Enter client name"
+          required value="{{ old('client') }}">
       </div>
 
       <div class="mb-3">
-        <label for="location" class="form-label"><strong>Client Location</strong></label>
-        <input type="text" class="form-control" id="location" name="location" placeholder="Enter client location"
-          required>
+        <label for="location" class="form-label"><strong>Client Location (optional)</strong></label>
+        <input type="text" class="form-control" id="location" name="location"
+          placeholder="Enter client location" value="{{ old('location') }}">
       </div>
 
       <div class="mb-3">
         <label for="approvedBy" class="form-label"><strong>Approved By</strong></label>
-        <input type="text" class="form-control" id="approvedBy" name="approved_by" placeholder="Enter Approver's Name"
-          required>
+        <input type="text" class="form-control" id="approvedBy" name="approved_by"
+          placeholder="Enter Approver's Name" required value="{{ old('approved_by') }}">
       </div>
       <x-form-button>Create</x-form-button>
     </form>

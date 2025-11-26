@@ -37,13 +37,25 @@ class StoreRequisitionController extends Controller
      */
     public function store(Request $request)
     {
-        //validate
-        $validated = $request->validate([
-            'requisition_id' => ['required', 'string'],
-            'client_name' => ['required', 'string'],
-            'location' => ['required', 'string'],
-            'approved_by' => ['required', 'string']
-        ]);
+
+        if (isset($request->location)) {
+            //validate
+            $validated = $request->validate([
+                'requisition_id' => ['required', 'string'],
+                'client_name' => ['required', 'string'],
+                'location' => ['string'],
+                'approved_by' => ['required', 'string']
+            ]);
+        } else {
+            //validate
+            $validated = $request->validate([
+                'requisition_id' => ['required', 'string'],
+                'client_name' => ['required', 'string'],
+                'approved_by' => ['required', 'string']
+            ]);
+        }
+
+        $location = $request->location ? $validated['location'] : null;
 
         //check if requisition_id already exists
         $requisition_id = StoreRequisition::where('requisition_id', $validated['requisition_id'])->first();
@@ -69,7 +81,7 @@ class StoreRequisitionController extends Controller
         StoreRequisition::create([
             'requisition_id' => $validated['requisition_id'],
             'client_name' => $validated['client_name'],
-            'location' => $validated['location'],
+            'location' => $location,
             'approved_by' => $validated['approved_by'],
             'requested_on' => now(),
             'created_by' => $user->id
@@ -105,13 +117,13 @@ class StoreRequisitionController extends Controller
     {
 
 
-        $record = StoreRequisition::with(['items','return'])->where('requisition_id', $requisition_id)->first();
+        $record = StoreRequisition::with(['items', 'return'])->where('requisition_id', $requisition_id)->first();
 
-if($record->return!=null){
-    return redirect()
-    ->back()
-    ->with('error','Sorry. You cannot delete a store requisition that has been returned');
-}
+        if ($record->return != null) {
+            return redirect()
+                ->back()
+                ->with('error', 'Sorry. You cannot delete a store requisition that has been returned');
+        }
 
         //update the quantity of the store items
         if ($record->items->count() > 0) {
@@ -128,8 +140,6 @@ if($record->return!=null){
         return redirect()
             ->back()
             ->with('success', 'Store Requisition deleted successfully');
-
-
     }
 
     public function search()

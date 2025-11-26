@@ -27,20 +27,31 @@ class RecoveryStoreRequisitionController extends Controller
     public function store(Request $request)
     {
 
-        //validate
-        $validated = $request->validate([
-            'requisition_id' => ['required', 'string'],
-            'client' => ['required', 'string'],
-            'location' => ['required', 'string'],
-            'approved_by' => ['required', 'string']
-        ]);
+        if (isset($request->location)) {
+            //validate
+            $validated = $request->validate([
+                'requisition_id' => ['required', 'string'],
+                'client' => ['required', 'string'],
+                'location' => ['string'],
+                'approved_by' => ['required', 'string']
+            ]);
+        } else {
+            //validate
+            $validated = $request->validate([
+                'requisition_id' => ['required', 'string'],
+                'client' => ['required', 'string'],
+                'approved_by' => ['required', 'string']
+            ]);
+        }
+        $location = $request->location ? $validated['location'] : null;
 
         //check if requisition_id already exists
         $requisition_id = RecoveryStoreRequisition::where('recovery_store_requisition_id', $validated['requisition_id'])->first();
         if ($requisition_id) {
             return redirect()
                 ->back()
-                ->with('error', ' recovery store requisition ID already exists.');
+                ->with('error', ' recovery store requisition ID already exists.')
+                ->withInput();
         }
 
         $requisition_id = StoreRequisition::where('requisition_id', $validated['requisition_id'])->first();
@@ -57,7 +68,7 @@ class RecoveryStoreRequisitionController extends Controller
         RecoveryStoreRequisition::create([
             'recovery_store_requisition_id' => $validated['requisition_id'],
             'client_name' => $validated['client'],
-            'location' => $validated['location'],
+            'location' => $location,
             'approved_by' => $validated['approved_by'],
             'requested_on' => now(),
             'created_by' => $user->id
@@ -76,14 +87,12 @@ class RecoveryStoreRequisitionController extends Controller
                 ->back()
                 ->with('error', 'No records found')
                 ->withInput();
-
         } else {
             return view('recovery.search', [
                 'recoveries' => $search,
                 'query' => request('q')
             ]);
         }
-
     }
     public function destroy($requisition_id)
     {

@@ -68,48 +68,24 @@
                                             </td>
                                             @if (Auth::user()->isAdmin === true)
                                                 <td class="text-center">
-
-                                                    <form id="delete-form-{{ $purchase->purchase_requisition_id }}"
-                                                        action="{{ route('acquired.destroy', $purchase->purchase_requisition_id) }}"
-                                                        method="POST">
-                                                        @csrf
-
-                                                        <button type="button" class="btn btn-sm btn-light" title="delete"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#deleteModal-{{ $purchase->purchase_requisition_id }}"
-                                                            style="cursor: pointer;">🗑️
+                                                    <div class="d-flex justify-content-center gap-2">
+                                                        <!-- View Button -->
+                                                        <button type="button" class="btn btn-sm btn-primary view-btn" 
+                                                            data-bs-toggle="modal" 
+                                                            data-bs-target="#viewModal" 
+                                                            data-requisition-id="{{ $purchase->purchase_requisition_id }}" 
+                                                            data-items="{{ json_encode($purchase->items) }}">
+                                                            View
                                                         </button>
-                                                    </form>
 
-                                                    <!-- Delete Confirmation Modal -->
-                                                    <div class="modal fade"
-                                                        id="deleteModal-{{ $purchase->purchase_requisition_id }}" tabindex="-1"
-                                                        aria-labelledby="deleteModalLabel-{{ $purchase->purchase_requisition_id }}"
-                                                        aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title"
-                                                                        id="deleteModalLabel-{{ $purchase->purchase_requisition_id }}">
-                                                                        Confirm Delete</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                                                                        aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    Are you sure you want to delete
-                                                                    {{ $purchase->purchase_requisition_id }}?
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary"
-                                                                        data-bs-dismiss="modal">No</button>
-                                                                    <button type="button" class="btn btn-danger confirm-delete"
-                                                                        data-requisition-id="{{ $purchase->purchase_requisition_id }}">Yes</button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
+                                                        <!-- Delete Button -->
+                                                        <button type="button" class="btn btn-sm btn-danger" title="Delete"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#deleteModal-{{ $purchase->purchase_requisition_id }}">
+                                                            Delete
+                                                        </button>
                                                     </div>
                                                 </td>
-
                                             @endif
                                         </tr>
 
@@ -123,6 +99,64 @@
             </div>
         </div>
 
+        <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewModalLabel">Acquired Purchase Requisition Items</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Requisition ID:</strong> <span id="modal-requisition-id"></span></p>
+
+                        <h5 class="mt-4">Items</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>No.</th>
+                                        <th>Item Name</th>
+                                        <th>Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="modal-items-table">
+                                    <!-- Items will be dynamically populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- JavaScript to handle export to PDF -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                document.querySelectorAll(".confirm-delete").forEach(button => {
+                    button.addEventListener("click", function () {
+                        let requisitionId = this.getAttribute("data-requisition-id");
+                        let form = document.getElementById(`delete-form-${requisitionId}`);
+                        form.submit();
+                    });
+                });
+
+                document.getElementById("export-pdf").addEventListener("click", function () {
+                    const { jsPDF } = window.jspdf;
+                    const doc = new jsPDF();
+                    doc.autoTable({
+                        html: '#acquired-table'
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- JavaScript to handle export to PDF -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
@@ -144,6 +178,36 @@
                         html: '#acquired-table'
                     });
                     window.open(doc.output('bloburl'), '_blank');
+                });
+            });
+        </script>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                // Handle View Button Click
+                document.querySelectorAll(".view-btn").forEach(button => {
+                    button.addEventListener("click", function () {
+                        // Get data attributes from the clicked button
+                        const requisitionId = this.getAttribute("data-requisition-id");
+                        const items = JSON.parse(this.getAttribute("data-items"));
+
+                        // Populate the modal with the data
+                        document.getElementById("modal-requisition-id").textContent = requisitionId;
+
+                        // Populate the items table
+                        const itemsTable = document.getElementById("modal-items-table");
+                        itemsTable.innerHTML = ""; // Clear previous items
+                        items.forEach((item, index) => {
+                            const row = `
+                                <tr>
+                                    <td>${index + 1}</td>
+                                    <td>${item.item_name || 'N/A'}</td>
+                                    <td>${item.quantity || 'N/A'}</td>
+                                </tr>
+                            `;
+                            itemsTable.innerHTML += row;
+                        });
+                    });
                 });
             });
         </script>

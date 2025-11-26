@@ -25,7 +25,7 @@ use App\Http\Controllers\StoresController;
 use App\Http\Controllers\UserController;
 use App\Models\EmergencyReturn;
 use Illuminate\Support\Facades\Route;
-
+use League\Csv\Query\Row;
 
 // Profile Route
 Route::get('/profile', function () {
@@ -427,6 +427,10 @@ Route::get('/emergency/return/create', [EmergencyReturnController::class, 'creat
 
 Route::post('/emergency/return/store', [EmergencyReturnController::class, 'store'])
     ->name('emergencyReturnStore')
+    ->middleware('auth');
+
+Route::post('/emergency/return/confirm/', [EmergencyReturnController::class, 'confirm'])
+    ->name('emergencyReturnConfirm')
     ->middleware('auth');
 
 

@@ -143,6 +143,7 @@ class EmergencyRequisitionItemController extends Controller
         if ($old) {
 
             $item = ReturnsStore::where('item_name', $validated['item_description'])->first();
+
             if ($item == null) {
                 return redirect()
                     ->back()
@@ -205,6 +206,26 @@ class EmergencyRequisitionItemController extends Controller
 
                     //remove the serial numbers from return stores
                     ReturnsStoreSerialNumber::where('serial_numbers', $serial)->delete();
+                }
+                //if resultant quantity is zero, delete the item
+                if ($balance == 0) {
+                    $item->delete();
+                }
+            } else {
+                //create the item
+                EmergencyRequisitionItem::create([
+                    'emergency_requisition_id' => $request->requisition_id,
+                    'item_name' => $validated['item_description'],
+                    'quantity' => $validated['quantity'],
+                    'from' => $validated['from'],
+                    'same_to_return' => $request->will_return === 'on' ? 1 : 0,
+
+                ]);
+                //update the quantity in return stores
+                $item->save();
+                //if resultant quantity is zero, delete the item
+                if ($balance == 0) {
+                    $item->delete();
                 }
             }
         }

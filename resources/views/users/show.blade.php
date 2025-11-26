@@ -9,7 +9,7 @@
             {{ ucfirst(strtolower($user->last_name)) }}
         </h2>
 
-        <div class="container">
+        <div class="container"></div>
             <div class="row">
                 <div class="col-lg-4">
                     <div class="profile-container">
