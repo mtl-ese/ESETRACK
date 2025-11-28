@@ -2,143 +2,178 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\SerialNumber;
 use App\Models\Store;
 use App\Models\StoreItem;
+use App\Traits\RequisitionItemTrait;
+use App\Models\StoreRequisitionDestinationLink;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StoreItemController extends Controller
 {
+    use RequisitionItemTrait;
+
     /**
-     * Display a listing of the resource.
+     * Display a listing of all store items.
      */
     public function index()
     {
-        //
+        $storeItems = StoreItem::with('store_requisition', 'destinationItems.link.destination')->latest()->get();
+        return view('storeReq.items.index', [
+            'storeItems' => $storeItems
+        ]);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
+    public function MaterialsIndex()
     {
-        return view('storeReq.items.create', [
-            'requisition_id' => request('requisition_id')
+        $storeItems = StoreItem::with('store_requisition', 'destinationItems.link.destination')->latest()->get();
+        return view('storeReq.materials.index', [
+            'storeItems' => $storeItems
         ]);
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Show the form for creating a new item for a requisition.
+     */
+    public function create($requisition_id)
+    {
+        $stores = Store::select('id', 'item_name')->distinct()->orderBy('item_name')->get();
+
+        $requisition = \App\Models\StoreRequisition::where('requisition_id', $requisition_id)->first();
+        $destinations = [];
+
+        if ($requisition) {
+            $destinations = $requisition->destinationLinks()
+                ->with('destination')
+                ->get()
+                ->map(function ($link) {
+                    return [
+                        'id' => $link->id,
+                        'client' => $link->destination->client,
+                        'location' => $link->destination->location,
+                        'display' => $link->destination->client . ' - ' . $link->destination->location
+                    ];
+                });
+        }
+
+        return view('storeReq.items.create', compact('requisition_id', 'stores', 'destinations'));
+    }
+
+    /**
+     * Store newly created items for a requisition.
      */
     public function store(Request $request)
     {
-        // Set up basic validation rules
-        $rules = [
-            'item_name' => 'required|string',
-            'quantity' => 'required|integer|min:1'
+        $items = json_decode($request->items, true);
 
-        ];
-
-        // If serial numbers are provided, validate them; otherwise, validate the quantity field.
-        if ($request->filled('serialNumbers')) {
-            $rules['serialNumbers'] = 'array';
-            $rules['serialNumbers.*'] = 'required|distinct|string|min:2|max:50';
-        } else {
-            $rules['quantity'] = 'required|integer|min:1';
+        if (!$items || !is_array($items)) {
+            return redirect()->back()->with('error', 'No items to process');
         }
 
-        $validated = $request->validate($rules);
+        try {
+            DB::transaction(function () use ($items, $request) {
+                foreach ($items as $itemData) {
+                    if (empty($itemData['destination_link_id'])) {
+                        throw new \Exception('Each item must be attached to at least one destination.');
+                    }
 
+                    if (
+                        !StoreRequisitionDestinationLink::where('id', $itemData['destination_link_id'])
+                            ->where('store_requisition_id', $request->requisition_id)
+                            ->exists()
+                    ) {
+                        throw new \Exception("Invalid destination link ID for item {$itemData['item_name']}.");
+                    }
 
-        // Find the store item by item name
-        $storeItem = Store::where('item_name', $validated['item_name'])->first();
-
-        if (!$storeItem) {
-            return redirect()
-                ->back()
-                ->with('error', 'No such item in stores')
-                ->withInput();
-        }
-
-        // Assign the quantity to a new variable
-        $requestedQuantity = $validated['quantity'];
-
-        //calculate the remaining quantity
-        $remainingQuantity = $storeItem->quantity - $requestedQuantity;
-
-        //check if the remaining quantity is not less than zero
-        if ($remainingQuantity < 0) {
-            return redirect()
-                ->back()
-                ->with(
-                    'error',
-                    'There are only ' . $storeItem->quantity . ' ' . $storeItem->item_name . ' in stores.'
-                )->withInput();
-        }
-
-        // Store store_requisition_id, item name and quantity
-        StoreItem::create([
-            'store_requisition_id' => $request->requisition_id,
-            'item_name' => $validated['item_name'],
-            'quantity' => $validated['quantity']
-        ]);
-
-        // Process the request based on whether serial numbers are present.
-        if (isset($validated['serialNumbers'])) {
-
-            //get the id of stored item
-            $item = StoreItem::where('item_name', $validated['item_name'])
-            ->where('store_requisition_id',$request->requisition_id)->first();
-            $id = $item->id;
-
-            //store serial numbers for the item
-            foreach ($validated['serialNumbers'] as $serial) {
-                $record = SerialNumber::where('serial_number', $serial)->first();
-                if ($record) {
-                    $item->delete();
-                    return redirect()
-                        ->back()
-                        ->with('error', 'Serial number ' . $serial . ' already exists in the system.')
-                        ->withInput();
+                    $this->createRequisitionItem($itemData, $request->requisition_id);
                 }
-                SerialNumber::create([
-                    'store_item_id' => $id,
-                    'store_requisition_id' => $request->requisition_id,
-                    'serial_number' => $serial,
-                ]);
-            }
+            });
+
+            return redirect()->route('store.show', $request->requisition_id)
+                ->with('success', 'All items added successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
         }
-
-        // Update the store quantity after the above operation succeeds
-        $storeItem->update(['quantity' => $remainingQuantity]);
-
-        //redirect to show the created item
-        return redirect()->route('store.show', $request->requisition_id)
-            ->with('success', 'Item added successfully');
-
     }
 
     /**
-     * Display the specified resource.
+     * Show the form for editing an item.
      */
-    public function show($requisition_id,$id)
+    public function edit($id)
     {
-        //get item name
-        $item = StoreItem::where('store_requisition_id',$requisition_id)->first();
+        $item = StoreItem::findOrFail($id);
+        $stores = Store::select('id', 'item_name')->distinct()->orderBy('item_name')->get();
+
+        return view('storeReq.items.edit', compact('item', 'stores'));
+    }
+
+    /**
+     * Update an item in a requisition.
+     */
+    public function update(Request $request)
+    {
+        $request->validate([
+            'item_id' => 'required|exists:store_items,id',
+            'item_name' => 'required|string',
+            'quantity' => 'required|integer|min:1',
+            'serialNumbers' => 'nullable|array',
+            'serialNumbers.*' => 'string',
+            'destination_link_id' => 'required|exists:store_requisition_destination_links,id',
+        ]);
+
+        try {
+            DB::transaction(function () use ($request) {
+                $requisitionItem = StoreItem::findOrFail($request->item_id);
+
+                // Validate destination link
+                $linkOk = StoreRequisitionDestinationLink::where('id', $request->destination_link_id)
+                    ->where('store_requisition_id', $requisitionItem->store_requisition_id)
+                    ->exists();
+
+                if (!$linkOk) {
+                    throw new \Exception("Invalid destination link for updated item {$request->item_name}");
+                }
+
+                $itemData = [
+                    'item_name' => $request->item_name,
+                    'quantity' => $request->quantity,
+                    'serialNumbers' => $request->serialNumbers ?? [],
+                    'destination_link_id' => $request->destination_link_id,
+                ];
+
+                // Use trait to handle update with stock logic
+                $this->createRequisitionItem($itemData, $requisitionItem->store_requisition_id);
+            });
+
+            return redirect()->back()->with('success', 'Item updated successfully');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
+    }
+
+    /**
+     * Show serial numbers for a requisition item.
+     */
+    public function show($requisition_id, $id)
+    {
+        $item = StoreItem::where('store_requisition_id', $requisition_id)
+            ->where('id', $id)
+            ->firstOrFail();
+
         $item_name = $item->item_name;
-        $requisition_id = $item->store_requisition_id;
 
+        $serial_numbers = \App\Models\ItemSerialNumber::whereHas('storeRequisitionHistory', function ($query) use ($requisition_id) {
+            $query->where('store_requisition_id', $requisition_id);
+        })->where('item_name', $item_name)->get();
 
-        //get serial numbers with matching id
-        $serial_numbers = SerialNumber::where('store_item_id', $id)->where('store_requisition_id',$item->store_requisition_id)->get();
+        $formatted_serials = $serial_numbers->map(function ($serial) {
+            return (object) ['serial_number' => $serial->serial_number];
+        });
 
-        //return the serial numbers and item name to item.show view
         return view('storeReq.items.serials.index', [
-            'serial_numbers' => $serial_numbers,
+            'serial_numbers' => $formatted_serials,
             'item_name' => $item_name,
             'requisition_id' => $requisition_id
         ]);
     }
-
-
 }

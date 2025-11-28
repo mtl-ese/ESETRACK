@@ -15,7 +15,7 @@ return new class extends Migration {
             $table->id();
             $table->foreignIdFor(StoreItem::class)->constrained()->onDelete('cascade');
             $table->string('store_requisition_id');
-            $table->string('serial_number')->unique();
+            $table->json('serial_number');
             $table->timestamps();
 
             $table

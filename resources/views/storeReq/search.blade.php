@@ -49,7 +49,7 @@
                             <td><a href="{{ route('store.show', $store->requisition_id) }}">{{ $store->creator->name }}</a>
                             </td>
                             <td><a
-                                    href="{{ route('store.show', $store->requisition_id) }}">{{ \Carbon\Carbon::parse($store->requested_on)->format('d M Y') }}</a>
+                                    href="{{ route('store.show', $store->requisition_id) }}">{{ $store->requested_on }}</a>
                             </td>
                             <td><a href="{{ route('store.show', $store->requisition_id) }}">{{ $store->approved_by }}</a>
                             </td>

@@ -11,12 +11,16 @@ class PurchaseRequisition extends Model
     use HasFactory;
     protected $primaryKey = 'requisition_id';
     public $incrementing = false;
-    protected $dates = ['requested_on'];
     protected $fillable = [
         'requisition_id',
+        'project_description',
         'requested_on',
         'created_by',
         'approved_by'
+    ];
+
+    protected $casts = [
+        'requested_on' => 'date'
     ];
 
     public function items()
@@ -31,7 +35,7 @@ class PurchaseRequisition extends Model
 
     public function acquired()
     {
-        return $this->hasOne(Acquired::class,'purchase_requisition_id','requisition_id');
+        return $this->hasMany(Acquired::class, 'purchase_requisition_id', 'requisition_id');
     }
 
 }

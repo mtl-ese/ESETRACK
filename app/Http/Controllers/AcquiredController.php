@@ -8,6 +8,7 @@ use App\Models\PurchaseItem;
 use App\Models\PurchaseRequisition;
 use App\Models\Store;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class AcquiredController extends Controller
 {
@@ -23,78 +24,262 @@ class AcquiredController extends Controller
         ]);
     }
 
+    public function materialsIndex()
+    {
+        $acquiredItems = AcquiredItem::with('acquired')->latest()->get();
+        return view('acquired.materials.index', [
+            'acquiredItems' => $acquiredItems
+        ]);
+    }
+
     public function create()
     {
-        return view('acquired.create');
+        // Get requisitions with unfulfilled items
+        $requisitions = PurchaseRequisition::whereHas('items', function ($query) {
+            $query->whereRaw('quantity > (
+                SELECT COALESCE(SUM(acquired_items.quantity), 0) 
+                FROM acquired_items 
+                JOIN acquireds ON acquired_items.acquired_id = acquireds.id 
+                WHERE acquireds.purchase_requisition_id = purchase_items.purchase_requisition_id 
+                AND acquired_items.purchase_item_id = purchase_items.id
+            )');
+        })->get();
+
+        return view('acquired.create', compact('requisitions'));
     }
 
-    //store a new acquired purchase
-    public function store(Request $request)
+
+    public function loadMaterials(Request $request)
     {
-        $validated = $request->validate([
-            'requisition_id' => ['required'],
+        $request->validate([
+            'requisition_id' => 'required|exists:purchase_requisitions,requisition_id'
         ]);
 
-        //check if id already exists
-        $record = Acquired::where('purchase_requisition_id', $validated['requisition_id'])->get();
-        if ($record->isNotEmpty()) {
-            return redirect()->back()->with('error', 'Acquired purchase requisition ID already exists.')
-                ->withInput();
+        $requisition = PurchaseRequisition::where('requisition_id', $request->requisition_id)
+            ->with('items')
+            ->first();
 
-        }
-        //find that requisition in purchase requisition table
-        $requisition = PurchaseRequisition::where('requisition_id', $validated['requisition_id'])->get();
-
-        //check if purchase requisition for the given requisition exists
-        if ($requisition->isNotEmpty()) {
-
-            //store the record
-            Acquired::create([
-                'purchase_requisition_id' => $validated['requisition_id'],
+        if (!$requisition) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Requisition not found'
             ]);
+        }
 
-            //redirect to acquired.index
-            return redirect()->route('acquired.index')->with('success', 'Acquired purchase requisition created successfully');
+        $materialsWithBalance = [];
 
-        } else {
+        foreach ($requisition->items as $item) {
+            // Calculate total acquired for this specific item
+            $totalAcquired = AcquiredItem::where('purchase_item_id', $item->id)->sum('quantity');
+            $balance = $item->quantity - $totalAcquired;
 
-            //redirect back with error
-            return redirect()->back()->with('error', 'No such purchase requisition ID exists.')
+            if ($balance > 0) {
+                $materialsWithBalance[] = [
+                    'id' => $item->id,
+                    'description' => $item->item_description,
+                    'requested' => $item->quantity,
+                    'acquired' => $totalAcquired,
+                    'balance' => $balance
+                ];
+            }
+        }
+
+        if (empty($materialsWithBalance)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'All materials for this requisition have been fully acquired.'
+            ]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'materials' => $materialsWithBalance,
+            'requisition' => $requisition
+        ]);
+    }
+    //Batch processing
+    public function store(Request $request)
+    {
+        $request->validate([
+            'requisition_id' => 'required|exists:purchase_requisitions,requisition_id',
+            'quantities' => 'required|array',
+            'quantities.*' => 'nullable|integer|min:1'
+        ]);
+
+        // Check if at least one quantity is provided
+        $hasQuantities = false;
+        foreach ($request->quantities as $quantity) {
+            if ($quantity && $quantity > 0) {
+                $hasQuantities = true;
+                break;
+            }
+        }
+
+        if (!$hasQuantities) {
+            return redirect()->back()
+                ->with('error', 'Please enter at least one quantity to acquire materials.')
                 ->withInput();
         }
 
+        try {
+            DB::transaction(function () use ($request) {
+                // Create new acquisition batch
+                $acquired = Acquired::create([
+                    'purchase_requisition_id' => $request->requisition_id
+                ]);
+
+                foreach ($request->quantities as $itemId => $quantity) {
+                    if ($quantity && $quantity > 0) {
+                        $purchaseItem = PurchaseItem::find($itemId);
+
+                        // Validate quantity doesn't exceed balance
+                        $totalAcquired = AcquiredItem::whereHas('acquired', function ($query) use ($purchaseItem) {
+                            $query->where('purchase_requisition_id', $purchaseItem->purchase_requisition_id);
+                        })->where('purchase_item_id', $itemId)->sum('quantity');
+
+                        $balance = $purchaseItem->quantity - $totalAcquired;
+
+                        if ($quantity > $balance) {
+                            throw new \Exception("Quantity for {$purchaseItem->item_description} exceeds available balance of {$balance}");
+                        }
+
+                        AcquiredItem::create([
+                            'acquired_id' => $acquired->id,
+                            'purchase_item_id' => $itemId,
+                            'item_description' => $purchaseItem->item_description,
+                            'quantity' => $quantity
+                        ]);
+
+                        // Update Store table
+                        $existingItem = Store::where('item_name', $purchaseItem->item_description)->first();
+                        if (!$existingItem) {
+                            Store::create([
+                                'item_name' => $purchaseItem->item_description,
+                                'quantity' => $quantity
+                            ]);
+                        } else {
+                            $existingItem->update([
+                                'quantity' => $existingItem->quantity + $quantity
+                            ]);
+                        }
+                    }
+                }
+            });
+
+            return redirect()->route('acquired.index')
+                ->with('success', 'Materials acquired successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Could not acquire due to internal server error. please consult technical support.')->withInput(['items' => $request->items]);
+        }
     }
 
-    public function destroy($requisition_id)
+    public function editForm($id)
     {
-        //get the record
-        $record = Acquired::with('items')->where('purchase_requisition_id', $requisition_id)->first();
+        $acquired = Acquired::with(['items.purchaseItem', 'requisition'])->findOrFail($id);
+
+        return view('acquired.edit', compact('acquired'));
+    }
+
+    public function updateAll(Request $request, $id)
+    {
+        $request->validate([
+            'quantities' => 'required|array',
+            'quantities.*' => 'nullable|integer|min:1'
+        ]);
+
+        $acquired = Acquired::with('items.purchaseItem')->findOrFail($id);
+
+        try {
+            DB::transaction(function () use ($request, $acquired) {
+                foreach ($request->quantities as $itemId => $quantity) {
+                    if ($quantity && $quantity > 0) {
+                        $acquiredItem = $acquired->items->where('id', $itemId)->first();
+
+                        if ($acquiredItem && $acquiredItem->purchaseItem) {
+                            $purchaseItem = $acquiredItem->purchaseItem;
+
+                            // Calculate total acquired for this purchase item (excluding current item)
+                            $totalAcquiredOthers = AcquiredItem::where('purchase_item_id', $purchaseItem->id)
+                                ->where('id', '!=', $acquiredItem->id)
+                                ->sum('quantity');
+
+                            // Check if new quantity exceeds available balance
+                            $availableBalance = $purchaseItem->quantity - $totalAcquiredOthers;
+
+                            if ($quantity > $availableBalance) {
+                                return redirect()->back()
+                                    ->with('error', "Quantity for {$purchaseItem->item_description} exceeds available balance of {$availableBalance}")
+                                    ->withInput();
+                            }
+
+                            // Update store quantities
+                            $storeItem = Store::where('item_name', $acquiredItem->item_description)->first();
+                            if ($storeItem) {
+                                // Adjust store quantity: remove old quantity, add new quantity
+                                $newStoreQuantity = $storeItem->quantity - $acquiredItem->quantity + $quantity;
+                                $storeItem->update(['quantity' => $newStoreQuantity]);
+                            }
+
+                            // Update acquired item quantity
+                            $acquiredItem->update(['quantity' => $quantity]);
+                        }
+                    }
+                }
+            });
+
+            return redirect()->route('acquired.index')
+                ->with('success', 'Acquired materials updated successfully!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Could not update due to internal server error. please consult technical support.')->withInput(['items' => $request->items]);
+        }
+    }
+
+    public function destroy($id)
+    {
+        //get the record by id
+        $record = Acquired::with('items')->find($id);
+
+        if (!$record) {
+            return redirect()
+                ->back()
+                ->with('error', 'Acquired record not found');
+        }
 
         //deleting when its items are empty
         if ($record->items->isEmpty()) {
             $record->delete();
             return redirect()
                 ->back()
-                ->with('success', 'Acquired purchase requisition deleted succesfully');
+                ->with('success', 'Acquired purchase requisition deleted successfully');
         }
 
         //deleting when its items are not empty
         foreach ($record->items as $item) {
-
             //get the item in stores
             $storeItem = Store::where('item_name', $item->item_description)->first();
 
-            //update its quantity
-            $balance = $storeItem->quantity - $item->quantity;
-            $storeItem->update(['quantity' => $balance]);
+            //update its quantity only if store item exists
+            if ($storeItem) {
+                $newQuantity = $storeItem->quantity - $item->quantity;
 
+                // Prevent negative quantities
+                if ($newQuantity < 0) {
+                    return redirect()
+                        ->back()
+                        ->with('error', "Cannot delete acquisition. Store only has {$storeItem->quantity} {$item->item_description} but trying to remove {$item->quantity}. Some items may have already been issued from store.");
+                }
+
+                $storeItem->update(['quantity' => $newQuantity]);
+            }
         }
+
         $record->delete();
 
         return redirect()
             ->back()
-            ->with('success', 'Acquired purchase requisition deleted succesfully');
-
+            ->with('success', 'Acquired purchase requisition deleted successfully');
     }
 
 

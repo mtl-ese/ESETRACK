@@ -171,7 +171,7 @@
 
     <!-- Load jQuery first -->
     <!-- Load jQuery from CDN -->
-    <!-- <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script> -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <!-- Load Flot from CDN -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/flot/0.8.3/jquery.flot.min.js"></script>

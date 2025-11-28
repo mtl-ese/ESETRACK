@@ -2,7 +2,7 @@
     <x-success></x-success>
     <x-error></x-error>
     <div class="d-flex">
-        <x-back-link href="{{ route('emergencyIndex') }}">Back</x-back-link>
+        <x-back-link style="max-height: fit-content;" href="{{ route('emergencyIndex') }}">Back</x-back-link>
         <x-add-items href="{{ route('emergencyItemsCreate', $requisition_id) }}">Add Items</x-add-items>
     </div>
 

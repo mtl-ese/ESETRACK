@@ -9,19 +9,19 @@ class Acquired extends Model
 {
     /** @use HasFactory<\Database\Factories\AcquiredItemFactory> */
     use HasFactory;
-    
-    protected $table='acquireds';
+
+    protected $table = 'acquireds';
     protected $fillable = [
         'id',
         'purchase_requisition_id',
     ];
     public function requisition()
     {
-        return $this->belongsTo(PurchaseRequisition::class);
+        return $this->belongsTo(PurchaseRequisition::class, 'purchase_requisition_id', 'requisition_id');
     }
 
     public function items()
     {
-        return $this->hasMany(AcquiredItem::class);
+        return $this->hasMany(AcquiredItem::class, 'acquired_id', 'id');
     }
 }

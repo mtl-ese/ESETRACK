@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -17,7 +16,7 @@ return new class extends Migration
             $table->string('last_name');
             $table->string('email')->unique();
             $table->string('password');
-            $table->date('DOB');
+            $table->integer('employee_number')->unique();
             $table->string('profile_image')->nullable(); // New column for image path
             $table->timestamp('last_login_at')->nullable();
             $table->boolean('isAdmin')->default(0);

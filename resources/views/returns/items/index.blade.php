@@ -2,11 +2,9 @@
     <x-success></x-success>
     <x-error></x-error>
     
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mb-5">
     <x-back-link href="{{ route('returns.index') }}">Back</x-back-link>
-    <x-add-items
-            href="{{ route('recovered-items.create', ['store_return_id' => $store_return_id, 'requisition_id' => $requisition_id]) }}">Add
-            Items</x-add-items>
+
     </div>
 
     @if ($items->isNotEmpty())
@@ -33,8 +31,9 @@
                                     <tr>
                                         <th style="color: white; background-color: #001f3f;">No.</th>
                                         <th style="color: white; background-color: #001f3f;">Item Description</th>
-                                        <th style="color: white; background-color: #001f3f;">Status</th>
                                         <th style="color: white; background-color: #001f3f;">Quantity</th>
+                                        <th style="color: white; background-color: #001f3f;">Customer Name</th>
+                                        <th style="color: white; background-color: #001f3f;">Serial Numbers</th>
                                         <th class="text-dark" style="background-color: rgb(255, 174, 0)">Balance</th>
                                     </tr>
                                 </thead>
@@ -44,10 +43,27 @@
                                     @endphp
                                     @foreach ($items as $item)
                                         <tr>
-                                            <td ><a href="{{ route('recoveredItemSerialIndex',[$store_return_id, $requisition_id]) }}" class="fw-bold text-decoration-none">{{ $number++ }}</a></td>
-                                            <td><a href="{{ route('recoveredItemSerialIndex',[$store_return_id, $requisition_id]) }}" class="fw-bold text-decoration-none">{{ $item->item_name }}</a></td>
-                                            <td><a href="{{ route('recoveredItemSerialIndex',[$store_return_id, $requisition_id]) }}" class="fw-bold text-decoration-none">{{ $item->status }}</a></td>
-                                            <td><a href="{{ route('recoveredItemSerialIndex',[$store_return_id, $requisition_id]) }}" class="fw-bold text-decoration-none">{{ $item->quantity }}</a></td>
+                                            <td  class="fw-bold text-decoration-none">{{ $number++ }}</td>
+                                            <td class="fw-bold text-decoration-none">{{ $item->item_name }}</td>
+                                            <td class="fw-bold text-decoration-none">{{ $item->quantity }}</td>
+                                            <td class="fw-bold">
+                                            @php
+                                                    $dest = optional(optional($item->destinationLink)->destination);
+                                                @endphp
+
+                                                @if ($dest)
+                                                    {{ $dest->client ?? 'N/A' }} - {{ $dest->location ?? 'N/A' }}
+                                                @else
+                                                    N/A
+                                                @endif
+                                            </td>
+                                            <td class="fw-bold">
+                                                @php
+                                                    // Controller already flattens serials into a clean string array
+                                                    $serialNumbers = $item->serial_numbers_flat ?? [];
+                                                @endphp
+                                                {{ !empty($serialNumbers) ? implode(', ', $serialNumbers) : 'N/A' }}
+                                            </td>
                                             <td class="fw-bold" style="background-color: rgba(255, 174, 0,0.75)">{{ $item->balance }}</td>
                                         </tr>
                                     @endforeach

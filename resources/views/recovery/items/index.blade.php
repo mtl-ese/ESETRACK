@@ -2,9 +2,8 @@
     <x-success></x-success>
     <x-error></x-error>
 
-    <div class="d-flex justify-content-between">
+    <div class="d-flex justify-content-between mb-5">
         <x-back-link href="{{ route('recovery.index') }}">Back</x-back-link>
-        <x-add-items href="{{ route('recovery-items.create', $requisition_id) }}">Add Items</x-add-items>
     </div>
 
     @if ($items->isNotEmpty())
@@ -20,8 +19,7 @@
             <div class="col-12">
                 <div class="card bg-light bg-opacity-50">
                     <div class="card-header border-bottom-1">
-                        <h3 class="card-title mt-2 text-lg"><strong>Recovery Store Requisition Items: {{ $requisition_id }}
-                            </strong></h3>
+                        <h3 class="card-title mt-2 text-lg"><strong>Recovery Requisition Items </strong></h3>
                     </div>
                     <div class="card-body bg-light bg-opacity-50">
                         <div class="table-responsive">
@@ -32,6 +30,8 @@
                                         <th style="color: white; background-color: #001f3f;">No.</th>
                                         <th style="color: white; background-color: #001f3f;">Item Description</th>
                                         <th style="color: white; background-color: #001f3f;">Quantity</th>
+                                          <th style="color: white; background-color: #001f3f;">Customer Name</th>
+                                        <th style="color: white; background-color: #001f3f;">Serial Number</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -40,9 +40,62 @@
                                     @endphp
                                     @foreach ($items as $item)
                                         <tr>
-                                            <td><a href="{{ route('recoveryItemsSerialIndex',[$item->id, $requisition_id]) }}" class="text-decoration-none fw-bold"> {{ $number++ }}</a></td>
-                                            <td><a href="{{ route('recoveryItemsSerialIndex',[$item->id, $requisition_id]) }}" class="text-decoration-none fw-bold"> {{ $item->item_name }}</a></td>
-                                            <td><a href="{{ route('recoveryItemsSerialIndex',[$item->id, $requisition_id]) }}" class="text-decoration-none fw-bold"> {{ $item->quantity }}</a></td>
+                                            <td class="text-decoration-none fw-bold"> {{ $number++ }}</td>
+                                            <td class="text-decoration-none fw-bold"> {{ $item->item_name }}</td>
+                                            <td class="text-decoration-none fw-bold"> {{ $item->quantity }}</td>
+                                            <td class="fw-bold">
+                                               @php
+                                                    $dest = optional(optional($item->destinationLink)->destination);
+                                                @endphp
+
+                                                @if ($dest)
+                                                    {{ $dest->client ?? 'N/A' }} - {{ $dest->location ?? 'N/A' }}
+                                                @else
+                                                    N/A
+                                                @endif
+                                            </td>
+                                            <td class="fw-bold">
+                                                @php
+                                                    $serialNumbers = [];
+                                                    foreach ($item->serial_numbers as $serialRecord) {
+                                                        $value = $serialRecord->serial_number;
+                                                        if (is_string($value)) {
+                                                            $decoded = json_decode($value, true);
+                                                            $jsonError = json_last_error();
+                                                            if ($jsonError === JSON_ERROR_NONE) {
+                                                                if (is_array($decoded)) {
+                                                                    foreach ($decoded as $serial) {
+                                                                        if ($serial !== null && $serial !== '') {
+                                                                            $serialNumbers[] = (string) $serial;
+                                                                        }
+                                                                    }
+                                                                } elseif ($decoded !== null && $decoded !== '') {
+                                                                    $serialNumbers[] = (string) $decoded;
+                                                                }
+                                                            } else {
+                                                                $trimmed = trim($value);
+                                                                if ($trimmed !== '') {
+                                                                    $serialNumbers[] = $trimmed;
+                                                                }
+                                                            }
+                                                        } elseif (is_array($value)) {
+                                                            foreach ($value as $serial) {
+                                                                if ($serial !== null && $serial !== '') {
+                                                                    $serialNumbers[] = (string) $serial;
+                                                                }
+                                                            }
+                                                        } elseif ($value !== null && $value !== '') {
+                                                            $serialNumbers[] = (string) $value;
+                                                        }
+                                                    }
+                                                    $serialNumbers = array_values(array_unique(array_filter(array_map(function ($serial) {
+                                                        return is_string($serial) ? trim($serial) : (string) $serial;
+                                                    }, $serialNumbers), function ($serial) {
+                                                        return $serial !== '';
+                                                    })));
+                                                @endphp
+                                                {{ !empty($serialNumbers) ? implode(', ', $serialNumbers) : 'N/A' }}
+                                            </td>
                                         </tr>
                                     @endforeach
                                 </tbody>

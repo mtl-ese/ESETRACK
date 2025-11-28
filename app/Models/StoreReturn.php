@@ -2,24 +2,21 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 
 class StoreReturn extends Model
 {
     protected $fillable = [
-        'store_requisition_id',
-        'old_client',
-        'location',
-        'was_created_by',
+        'recovery_requisition_id',
         'created_by',
-        'was_approved_by',
         'approved_by',
         'returned_on'
     ];
 
-    public function store_requisition()
+    public function recovery_store_requisition()
     {
-        return $this->belongsTo(StoreRequisition::class, 'store_requisition_id');
+        return $this->belongsTo(RecoveryStoreRequisition::class, 'recovery_requisition_id', 'recovery_requisition_id');
     }
 
     public function creator()
@@ -27,14 +24,16 @@ class StoreReturn extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function old_creator()
+    public function items()
     {
-        return $this->belongsTo(User::class, 'was_created_by');
-    
+        return $this->hasMany(StoreReturnItem::class, 'store_return_id');
     }
 
-    public function items(){
-        return $this->hasMany(RecoveredItem::class,'store_return_id');
+    protected function casts(): array
+    {
+        return [
+            'returned_on' => 'date'
+        ];
     }
 }
 

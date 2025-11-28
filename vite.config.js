@@ -11,7 +11,7 @@ export default defineConfig({
     // server: {
     //     host: '0.0.0.0', // Allow access from any device on the network
     //     hmr: {
-    //         host: '192.168.200.27', // Replace with your PC's LAN IP address
+    //         host: '192.168.200.196', // Replace with your PC's LAN IP address
     //     },
     // },
 });

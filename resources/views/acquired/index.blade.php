@@ -36,10 +36,11 @@
                                     <tr>
                                         <th style="color: white; background-color: #001f3f;">No.</th>
                                         <th style="color: white; background-color: #001f3f;">Purchase Requisition ID</th>
+                                        <th style="color: white; background-color: #001f3f;">Project Description</th>
                                         <th style="color: white; background-color: #001f3f;">Date</th>
-                                        @if (Auth::user()->isAdmin === true)
+                                    
                                             <th style="color: white; background-color: #001f3f;" class="no-export">Action</th>
-                                        @endif
+                                        
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -50,43 +51,42 @@
 
                                         <tr>
                                             <!-- Display purchase requisition ID and date -->
-                                            <td>
-                                                <a href="{{ route('item.index', $purchase->id)}}" title="show items" class="text-decoration-none fw-bold">
+                                            <td class="fw-bold" style="color: #007bff;">
                                                     {{ $number++}}
-                                                </a>
                                             </td>
-                                            <td>
-                                                <a href="{{ route('item.index', $purchase->id)}}" title="show items" class="text-decoration-none fw-bold">
+                                            <td class="fw-bold" style="color: #007bff;">
                                                     {{ $purchase->purchase_requisition_id }}
+                                            </td>
+                                            <td class="fw-bold" style="color: #007bff;">
+                                                    {{ $purchase->requisition->project_description }}
+                                            </td>
+                                            <td class="fw-bold" style="color: #007bff;">
+                                                    {{ $purchase->requisition->requested_on}}
+                                            </td>
+                                            </td>
+                                             <td class="text-center">
+                                                <!-- View Button -->
+                                                <a href="{{ route('item.index', $purchase->id) }}" style="text-decoration:none">
+                                                    <i class="fas fa-eye" style="color:#001f3f"></i>
                                                 </a>
-                                            </td>
-                                            <td>
-                                                <a href="{{ route('item.index', $purchase->id)}}" title="show items" class="text-decoration-none fw-bold">
-                                                    {{ \Carbon\Carbon::parse($purchase->created_at)->format('d M Y') }}
-                                                </a>
-                                            </td>
-                                            </td>
-                                            @if (Auth::user()->isAdmin === true)
-                                                <td class="text-center">
-                                                    <div class="d-flex justify-content-center gap-2">
-                                                        <!-- View Button -->
-                                                        <button type="button" class="btn btn-sm btn-primary view-btn" 
-                                                            data-bs-toggle="modal" 
-                                                            data-bs-target="#viewModal" 
-                                                            data-requisition-id="{{ $purchase->purchase_requisition_id }}" 
-                                                            data-items="{{ json_encode($purchase->items) }}">
-                                                            View
-                                                        </button>
 
-                                                        <!-- Delete Button -->
-                                                        <button type="button" class="btn btn-sm btn-danger" title="Delete"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#deleteModal-{{ $purchase->purchase_requisition_id }}">
-                                                            Delete
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            @endif
+                                                @if (Auth::user()->isAdmin === true || Auth::user()->isSuperAdmin === 1)
+                                                <a style="margin-left: 19px; margin-right: 10px; text-decoration:none;" href="{{ route('acquired.edit-form', $purchase->id) }}">
+                                                    <i class="fas fa-edit" style="color:#343a40"></i>
+                                                </a>
+
+                                                <!-- Delete Button -->
+                                                <form id="delete-form-{{ $purchase->id }}" 
+                                                    action="{{ route('acquired.destroy', $purchase->id) }}" 
+                                                    method="POST" style="display: inline;">
+                                                    @csrf
+                                                    <button type="button" class="btn btn-link p-0 delete-btn" 
+                                                            data-requisition-id="{{ $purchase->purchase_requisition_id }}" title="delete">
+                                                        <i class="fas fa-trash" style="color: red;"></i>
+                                                    </button>
+                                                </form>
+                                                @endif
+                                            </td>
                                         </tr>
 
                                     @endforeach
@@ -99,119 +99,23 @@
             </div>
         </div>
 
-        <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="viewModalLabel">Acquired Purchase Requisition Items</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p><strong>Requisition ID:</strong> <span id="modal-requisition-id"></span></p>
-
-                        <h5 class="mt-4">Items</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Item Name</th>
-                                        <th>Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="modal-items-table">
-                                    <!-- Items will be dynamically populated here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
         <!-- JavaScript to handle export to PDF -->
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
         <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll(".confirm-delete").forEach(button => {
-                    button.addEventListener("click", function () {
+            document.addEventListener("DOMContentLoaded", function() {
+                document.querySelectorAll(".delete-btn").forEach(button => {
+                    button.addEventListener("click", function() {
                         let requisitionId = this.getAttribute("data-requisition-id");
-                        let form = document.getElementById(`delete-form-${requisitionId}`);
-                        form.submit();
-                    });
-                });
-
-                document.getElementById("export-pdf").addEventListener("click", function () {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    doc.autoTable({
-                        html: '#acquired-table'
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- JavaScript to handle export to PDF -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll(".confirm-delete").forEach(button => {
-                    button.addEventListener("click", function () {
-                        let requisitionId = this.getAttribute("data-requisition-id");
-                        let form = document.getElementById(`delete-form-${requisitionId}`);
-                        form.submit();
-                    });
-                });
-
-                document.getElementById("export-pdf").addEventListener("click", function () {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    doc.autoTable({
-                        html: '#acquired-table'
-                    });
-                    window.open(doc.output('bloburl'), '_blank');
-                });
-            });
-        </script>
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Handle View Button Click
-                document.querySelectorAll(".view-btn").forEach(button => {
-                    button.addEventListener("click", function () {
-                        // Get data attributes from the clicked button
-                        const requisitionId = this.getAttribute("data-requisition-id");
-                        const items = JSON.parse(this.getAttribute("data-items"));
-
-                        // Populate the modal with the data
-                        document.getElementById("modal-requisition-id").textContent = requisitionId;
-
-                        // Populate the items table
-                        const itemsTable = document.getElementById("modal-items-table");
-                        itemsTable.innerHTML = ""; // Clear previous items
-                        items.forEach((item, index) => {
-                            const row = `
-                                <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${item.item_name || 'N/A'}</td>
-                                    <td>${item.quantity || 'N/A'}</td>
-                                </tr>
-                            `;
-                            itemsTable.innerHTML += row;
-                        });
+                        let formId = this.closest('form').id; // Get the actual form ID
+                        if (confirm(`Are you sure you want to delete ${requisitionId}?`)) {
+                            let form = document.getElementById(formId);
+                            form.submit();
+                        }
                     });
                 });
             });
         </script>
-
     @else
         <h4 class="mb-4 text-center">Acquired Purchase Requsitions</h4>
         <h5 class="text-center">No records found, click the + icon to add acquired purchase requisitions</h5>

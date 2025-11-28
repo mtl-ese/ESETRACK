@@ -44,49 +44,49 @@
                     @endphp
                     @foreach ($stores as $store)
                         <tr>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $number++ }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->store_requisition_id }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->old_client }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->location }}</a>
-                            </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $number++ }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->store_requisition_id }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->old_client }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->location }}</a>
+                </td>
 
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->old_creator->first_name }} {{ $store->old_creator->last_name }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->creator->first_name }} {{ $store->creator->last_name }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ \Carbon\Carbon::parse($store->returned_on)->format('d M Y') }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->was_approved_by }}</a>
-                            </td>
-                            <td><a
-                                    href="{{ route('recovered-items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->approved_by }}</a>
-                            </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->old_creator->first_name }} {{ $store->old_creator->last_name }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->creator->first_name }} {{ $store->creator->last_name }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ \Carbon\Carbon::parse($store->returned_on)->format('d M Y') }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->was_approved_by }}</a>
+                </td>
+                <td><a
+                    href="{{ route('returns.items.index', ['store_return_id' => $store->id, 'requisition_id' => $store->store_requisition_id]) }}">{{ $store->approved_by }}</a>
+                </td>
 
                             <td class="text-center">
-                                <form id="delete-form-{{ $store->store_requisition_id }}"
-                                    action="{{ route('returns.destroy', $store->store_requisition_id) }}" method="POST">
+                                <form id="delete-form-{{ $store->id }}"
+                                    action="{{ route('returns.destroy', $store->recovery_requisition_id) }}" method="POST">
                                     @csrf
 
                                     <button type="button" class="btn btn-sm btn-light" title="delete" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal-{{ $store->store_requisition_id }}"
+                                        data-bs-target="#deleteModal-{{ $store->id }}"
                                         style="cursor: pointer;">🗑️
                                     </button>
                                 </form>
 
                                 <!-- Delete Confirmation Modal -->
-                                <div class="modal fade" id="deleteModal-{{ $store->store_requisition_id }}" tabindex="-1"
-                                    aria-labelledby="deleteModalLabel-{{ $store->store_requisition_id }}" aria-hidden="true">
+                                <div class="modal fade" id="deleteModal-{{ $store->id }}" tabindex="-1"
+                                    aria-labelledby="deleteModalLabel-{{ $store->id }}" aria-hidden="true">
                                     <div class="modal-dialog">
                                         <div class="modal-content">
                                             <div class="modal-header">
@@ -103,7 +103,8 @@
                                                 <button type="button" class="btn btn-secondary"
                                                     data-bs-dismiss="modal">No</button>
                                                 <button type="button" class="btn btn-danger confirm-delete"
-                                                    data-requisition-id="{{ $store->store_requisition_id }}">Yes</button>
+                                                    data-return-id="{{ $store->id }}"
+                                                    data-reference="{{ $store->store_requisition_id }}">Yes</button>
                                             </div>
                                         </div>
                                     </div>
@@ -122,29 +123,34 @@
             document.addEventListener("DOMContentLoaded", function () {
                 document.querySelectorAll(".confirm-delete").forEach(button => {
                     button.addEventListener("click", function () {
-                        let requisitionId = this.getAttribute("data-requisition-id");
-                        let form = document.getElementById(`delete-form-${requisitionId}`);
-                        form.submit();
+                        const returnId = this.getAttribute("data-return-id");
+                        const form = document.getElementById(`delete-form-${returnId}`);
+                        if (form) {
+                            form.submit();
+                        }
                     });
                 });
 
-                document.getElementById("export-pdf").addEventListener("click", function () {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
+                const exportButton = document.getElementById("export-pdf");
+                if (exportButton) {
+                    exportButton.addEventListener("click", function () {
+                        const { jsPDF } = window.jspdf;
+                        const doc = new jsPDF();
 
-                    // Hide the action column
-                    const actionColumn = document.querySelectorAll('#returns-table th:nth-child(10), #returns-table td:nth-child(10)');
-                    actionColumn.forEach(cell => cell.style.display = 'none');
+                        // Hide the action column
+                        const actionColumn = document.querySelectorAll('#returns-table th:nth-child(10), #returns-table td:nth-child(10)');
+                        actionColumn.forEach(cell => cell.style.display = 'none');
 
-                    doc.autoTable({
-                        html: '#returns-table'
+                        doc.autoTable({
+                            html: '#returns-table'
+                        });
+
+                        // Show the action column again
+                        actionColumn.forEach(cell => cell.style.display = '');
+
+                        window.open(doc.output('bloburl'), '_blank');
                     });
-
-                    // Show the action column again
-                    actionColumn.forEach(cell => cell.style.display = '');
-
-                    window.open(doc.output('bloburl'), '_blank');
-                });
+                }
             });
         </script>
 

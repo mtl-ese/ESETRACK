@@ -3,10 +3,8 @@
     <x-error></x-error>
 
     @if ($stores->isNotEmpty())
-        <!-- <h2 class="mb-4 text-center">Store Requisitions</h2>
-        <div class="d-flex justify-content-center">
-
-            <form class="input-group mb-3" style="max-width: 400px;" method="post" action="{{ route('store.search') }}">
+       <!-- <div class="d-flex justify-content-center">-->
+           <!-- <form class="input-group mb-3" style="max-width: 400px;" method="post" action="{{ route('store.search') }}">
                 @csrf
                 <input type="text" class="form-control" name="q" placeholder="Requisition ID or Customer name"
                     aria-label="Search" aria-describedby="search-button" required>
@@ -14,211 +12,137 @@
             </form>
         </div> -->
 
-        <!-- <div class="d-flex justify-content-end mb-3">
+     <!--<div class="d-flex justify-content-end mb-3">
             <x-form-button id="export-pdf">Export to PDF</x-form-button>
         </div> -->
 
 
-        <div class="row">
-            <div class="col-12">
-                <div class="card bg-light bg-opacity-50">
-                    <div class="card-header border-bottom-1">
-                        <h3 class="card-title mt-2 text-lg"><strong>Store Requisitions</strong></h3>
-                    </div>
-                    <div class="card-body bg-light bg-opacity-50">
-                        <div class="table-responsive">
-                            <table id="example1" class="table table-bordered table-striped table-hover"
-                                data-title="Store Requisitions">
-                                <thead>
-                                    <tr>
-                                        <th style="color: white; background-color: #001f3f ;">No.</th>
-                                        <th style="color: white; background-color: #001f3f ;">Requisition ID</th>
-                                        <th style="color: white; background-color: #001f3f ;"> Customer name</th>
-                                        <th style="color: white; background-color: #001f3f ;">Location</th>
-                                        <th style="color: white; background-color: #001f3f ;">Created By</th>
-                                        <th style="color: white; background-color: #001f3f ;">Requested On</th>
-                                        <th style="color: white; background-color: #001f3f ;">Approved By</th>
-                                        @if(Auth::user()->isAdmin === 1 || Auth::user()->isSuperAdmin === 1)
-                                            <th class="no-export" style="color: white; background-color: #001f3f ;">Action
-                                            </th>
-                                        @endif
-
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $number = 1;
-                                    @endphp
-                                    @foreach ($stores as $store)
-                                        <tr>
-                                            <td><a href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ $number++ }}</a>
-                                            </td>
-                                            <td><a
-                                                    href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ $store->requisition_id }}</a>
-                                            </td>
-                                            <td><a
-                                                    href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ $store->client_name }}</a>
-                                            </td>
-                                            <td><a
-                                                    href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ $store->location }}</a>
-                                            </td>
-
-                                            <td><a href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ $store->creator->first_name }}
-                                                    {{ $store->creator->last_name }}</a></td>
-                                            <td><a
-                                                    href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ \Carbon\Carbon::parse($store->requested_on)->format('d M Y') }}</a>
-                                            </td>
-                                            <td><a
-                                                    href="{{ route('store.show', $store->requisition_id) }}" class="text-decoration-none fw-bold">{{ $store->approved_by }}</a>
-                                            </td>
-                                            @if (Auth::user()->isAdmin === 1 || Auth::user()->isSuperAdmin === 1)
-                                                <td class="text-center">
-                                                    <!-- View Button -->
-                                                    <button type="button" class="btn btn-sm btn-primary view-btn" 
-                                                        data-bs-toggle="modal" 
-                                                        data-bs-target="#viewModal" 
-                                                        data-requisition-id="{{ $store->requisition_id }}" 
-                                                        data-items="{{ json_encode($store->items) }}">
-                                                        View
-                                                    </button>
-
-                                                    <!-- Delete Button -->
-                                                    <button type="button" class="btn btn-sm btn-light" title="delete"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#deleteModal-{{ $store->requisition_id }}"
-                                                        style="cursor: pointer;">🗑️
-                                                    </button>
-
-                                                    <!-- Delete Confirmation Modal -->
-                                                    <div class="modal fade" id="deleteModal-{{ $store->requisition_id }}" tabindex="-1"
-                                                        aria-labelledby="deleteModalLabel-{{ $store->requisition_id }}" aria-hidden="true">
-                                                        <div class="modal-dialog">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="deleteModalLabel-{{ $store->requisition_id }}">Confirm Delete</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    Are you sure you want to delete {{ $store->requisition_id }}?
-                                                                </div>
-                                                                <div class="modal-footer">
-                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
-                                                                    <button type="button" class="btn btn-danger confirm-delete"
-                                                                        data-requisition-id="{{ $store->requisition_id }}">Yes</button>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            @endif
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light bg-opacity-50">
+                <div class="card-header border-bottom-1">
+                    <h3 class="card-title mt-2 text-lg"><strong>Store Requisitions</strong></h3>
                 </div>
-            </div>
-        </div>
-
-        <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-lg">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="viewModalLabel">Store Requisition Items</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <p><strong>Requisition ID:</strong> <span id="modal-requisition-id"></span></p>
-
-                        <h5 class="mt-4">Items</h5>
-                        <div class="table-responsive">
-                            <table class="table table-bordered table-striped">
-                                <thead>
-                                    <tr>
-                                        <th>No.</th>
-                                        <th>Item Name</th>
-                                        <th>Quantity</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="modal-items-table">
-                                    <!-- Items will be dynamically populated here -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- JavaScript to handle delete confirmation and export to PDF -->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                document.querySelectorAll(".confirm-delete").forEach(button => {
-                    button.addEventListener("click", function () {
-                        let requisitionId = this.getAttribute("data-requisition-id");
-                        let form = document.getElementById(`delete-form-${requisitionId}`);
-                        form.submit();
-                    });
-                });
-
-                document.getElementById("export-pdf").addEventListener("click", function () {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-
-                    // Hide the action column
-                    const actionColumn = document.querySelectorAll('#example1 th:nth-child(8), #example1 td:nth-child(8)');
-                    actionColumn.forEach(cell => cell.style.display = 'none');
-
-                    doc.autoTable({
-                        html: '#example1'
-                    });
-
-                    // Show the action column again
-                    actionColumn.forEach(cell => cell.style.display = '');
-
-                    window.open(doc.output('bloburl'), '_blank');
-                });
-            });
-        </script>
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                // Handle View Button Click
-                document.querySelectorAll(".view-btn").forEach(button => {
-                    button.addEventListener("click", function () {
-                        // Get data attributes from the clicked button
-                        const requisitionId = this.getAttribute("data-requisition-id");
-                        const items = JSON.parse(this.getAttribute("data-items"));
-
-                        // Populate the modal with the data
-                        document.getElementById("modal-requisition-id").textContent = requisitionId;
-
-                        // Populate the items table
-                        const itemsTable = document.getElementById("modal-items-table");
-                        itemsTable.innerHTML = ""; // Clear previous items
-                        items.forEach((item, index) => {
-                            const row = `
+                <div class="card-body bg-light bg-opacity-50">
+                    <div class="table-responsive">
+                        <table id="example1" class="table table-bordered table-striped table-hover"
+                            data-title="Store Requisitions">
+                            <thead>
                                 <tr>
-                                    <td>${index + 1}</td>
-                                    <td>${item.item_name || 'N/A'}</td> <!-- Use item_name -->
-                                    <td>${item.quantity || 'N/A'}</td>
+                                    <th style="color: white; background-color: #001f3f ;">No.</th>
+                                    <th style="color: white; background-color: #001f3f ;">Requisition ID</th>
+                                    <th style="color: white; background-color: #001f3f ;"> Customer name</th>
+                                    <th style="color: white; background-color: #001f3f ;">Location</th>
+                                    <th style="color: white; background-color: #001f3f ;">Created By</th>
+                                    <th style="color: white; background-color: #001f3f ;">Requested On</th>
+                                    <th style="color: white; background-color: #001f3f ;">Approved By</th>
+                                    <th class="no-export" style="color: white; background-color: #001f3f ;">Action
+                                    </th>
                                 </tr>
-                            `;
-                            itemsTable.innerHTML += row;
-                        });
-                    });
-                });
+                            </thead>
+                            <tbody>
+                                @php
+                                $number = 1;
+                                @endphp
+                                @foreach ($stores as $store)
+                                <tr>
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">{{ $number++ }}
+                                    </td>
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">{{ $store->requisition_id }}
+                                    </td>
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">
+                                            @php
+                                                // Collect all destination clients
+                                                $destinationClients = $store->destinationLinks
+                                                    ->pluck('destination.client') // get client name from related destination
+                                                    ->filter()                    // remove nulls
+                                                    ->unique();                   // remove duplicates
+                                            @endphp
+                                            
+                                            @if($destinationClients->isNotEmpty())
+                                                {{ $destinationClients->implode(', ') }}
+                                            @endif
+                                    </td>
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">
+                                            @php
+                                            // Collect all destination locations
+                                                $destinationLocations = $store->destinationLinks
+                                                    ->pluck('destination.location') // get location from related destination
+                                                    ->filter()                    // remove nulls
+                                                    ->unique();                   // remove duplicates
+                                            @endphp
+                                            
+                                            @if($destinationLocations->isNotEmpty())
+                                                {{ $destinationLocations->implode(', ') }}
+                                            @endif
+                                    </td>
+
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">{{ $store->creator->first_name }}
+                                            {{ $store->creator->last_name }}</td>
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">{{ $store->requested_on }}
+                                    </td>
+                                    <td
+                                            class="text-decoration-none fw-bold" style="color: #007bff">{{ $store->approved_by }}
+                                    </td>
+
+                                    <td class="text-center">
+                                        <!-- View Button -->
+                                        <a href="{{ route('store.show', $store->requisition_id) }}" style="text-decoration:none">
+                                            <i class="fas fa-eye" style="color:#001f3f"></i>
+                                        </a>
+
+                                        @if (Auth::user()->isAdmin === true || Auth::user()->isSuperAdmin === 1)
+                                        <a style="margin-left: 19px; margin-right: 10px; text-decoration:none;" href="{{ route('store.edit-form', $store->requisition_id) }}">
+                                            <i class="fas fa-edit" style="color:#343a40"></i>
+                                        </a>
+
+                                        <!-- Delete Button -->
+                                        <form id="delete-form-{{ $store->requisition_id }}" 
+                                              action="{{ route('store.destroy', $store->requisition_id) }}" 
+                                              method="POST" style="display: inline;">
+                                            @csrf
+                                            <button type="button" class="btn btn-link p-0 delete-btn" 
+                                                    data-requisition-id="{{ $store->requisition_id }}" title="delete">
+                                                <i class="fas fa-trash" style="color: red;"></i>
+                                            </button>
+                                        </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript to handle delete confirmation and export to PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.13/jspdf.plugin.autotable.min.js"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.querySelectorAll(".delete-btn").forEach(button => {
+            button.addEventListener("click", function() {
+                let requisitionId = this.getAttribute("data-requisition-id");
+                if (confirm(`Are you sure you want to delete ${requisitionId}?`)) {
+                    let form = document.getElementById(`delete-form-${requisitionId}`);
+                    form.submit();
+                }
             });
-        </script>
+        });
+    });
+    </script>
 
     @else
-        <h2 class="mb-4 text-center">No Store Requisition records</h2>
+    <h2 class="mb-4 text-center">No Store Requisition records</h2>
 
     @endif
 </x-layout>

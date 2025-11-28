@@ -55,8 +55,8 @@
                                                 <p><strong>Email:</strong> {{ Auth::user()->email }}</p>
                                                 <p><strong>Logged in since:</strong>
                                                     {{ Auth::user()->last_login_at->diffForHumans() }}</p>
-                                                <p><strong>Date of Birth:</strong>
-                                                    {{ \Carbon\Carbon::parse(Auth::user()->DOB)->format('d M Y') }}</p>
+                                                <p><strong>Employee Number:</strong>
+                                                    {{ Auth::user()->employee_number }}</p>
                                             </div>
                                         </div>
                                     </div>

@@ -10,11 +10,10 @@ class CreateStoreRequisitionsTable extends Migration
     {
         Schema::create('store_requisitions', function (Blueprint $table) {
             $table->string('requisition_id')->primary();
-            $table->string('client_name');
-            $table->string('location')->nullable();
             $table->date('requested_on');
             $table->unsignedBigInteger('created_by');
             $table->string('approved_by');
+            $table->text('item_diversion_note')->nullable();
             $table->timestamps();
 
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');

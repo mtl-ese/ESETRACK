@@ -24,11 +24,10 @@
             </div>
 
             <div class="mb-3">
-                <label for="DOB" class="form-label"><strong>Date of birth</strong></label>
-                <input type="date" class="form-control" id="DOB" name="DOB" placeholder="Select date of birth"
-                    value="{{ old('DOB') }}" required>
+                <label for="employee_number" class="form-label"><strong>Employee Number</strong></label>
+                <input type="number" class="form-control" id="employee_number" name="employee_number" placeholder="Enter Employee Number"
+                    value="{{ old('employee_number') }}" required min="1">
             </div>
-
             <x-form-button>Create</x-form-button>
         </form>
     </div>

@@ -1,1 +1,9 @@
+vendor
 node_modules
+.env
+.env.backup
+storage/*.key
+public/storage
+public/hot
+storage/logs/*.log
+storage/framework/cache/data/*

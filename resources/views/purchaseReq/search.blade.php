@@ -49,7 +49,7 @@
                                     {{ $purchase->creator->last_name }}</a>
                             </td>
                             <td><a
-                                    href="{{ route('purchase.show', $purchase->requisition_id) }}">{{ \Carbon\Carbon::parse($purchase->requested_on)->format('d M Y') }}</a>
+                                    href="{{ route('purchase.show', $purchase->requisition_id) }}">{{ $purchase->requested_on }}</a>
                             </td>
                             <td><a
                                     href="{{ route('purchase.show', $purchase->requisition_id) }}">{{ $purchase->approved_by }}</a>

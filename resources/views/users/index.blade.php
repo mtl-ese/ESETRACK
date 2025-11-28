@@ -21,7 +21,7 @@
                                     <th style="color: white; background-color: #001f3f;">No.</th>
                                     <th style="color: white; background-color: #001f3f;">Full Name</th>
                                     <th style="color: white; background-color: #001f3f;">Email</th>
-                                    <th style="color: white; background-color: #001f3f;">Created On</th>
+                                    <th style="color: white; background-color: #001f3f;">Employee Number</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -32,7 +32,7 @@
                                             <td class="fw-bold">{{ $number++ }}</td>
                                             <td class="fw-bold">{{ $user->first_name }} {{ $user->last_name }}</td>
                                             <td class="fw-bold">{{ $user->email }}</td>
-                                            <td class="fw-bold">{{ \Carbon\Carbon::parse($user->created_at)->format('d M Y') }}</td>
+                                            <td class="fw-bold">{{ $user->employee_number }}</td>
                                         </tr>
                                     @else
                                         <tr>
@@ -53,7 +53,7 @@
                                             </td>
                                             <td>
                                                 <a href="{{ route('usersShow', $user->id) }}" class="text-decoration-none fw-bold">
-                                                    {{ \Carbon\Carbon::parse($user->created_at)->format('d M Y') }}
+                                                    {{ $user->employee_number }}
                                                 </a>
                                             </td>
                                         </tr>

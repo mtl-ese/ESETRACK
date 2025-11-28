@@ -74,15 +74,15 @@
             let container = $('#serialNumbersContainer');
             container.empty();
 
-            // Only display serial fields if the item is in our array and the "from" value is required
-            if (itemsRequiringSerial.includes(itemDesc) && requiredFrom.includes(from)) {
+            // Check if the item description contains any of the strings in the array
+            if (itemsRequiringSerial.some(serialItem => itemDesc.includes(serialItem))) {
                 for (let i = 1; i <= quantity; i++) {
                     container.append(`
-                            <div class="mb-3">
-                                <label for="serialNumber${i}"><strong>Serial Number ${i}:</strong></label>
-                                <input type="text" class="form-control" placeholder="Enter Serial Number" id="serialNumber${i}" name="serialNumbers[]" required>
-                            </div>
-                        `);
+                <div class="mb-3">
+                    <label for="serialNumber${i}"><strong>Serial Number ${i}:</strong></label>
+                    <input type="text" class="form-control" placeholder="Enter Serial Number" id="serialNumber${i}" name="serialNumbers[]" required>
+                </div>
+            `);
                 }
             }
         }

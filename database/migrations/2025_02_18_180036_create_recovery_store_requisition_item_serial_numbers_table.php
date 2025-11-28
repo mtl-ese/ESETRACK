@@ -14,6 +14,7 @@ return new class extends Migration {
         Schema::create('recovery_store_requisition_item_serial_numbers', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('item_id');
+            $table->boolean('returned')->default(false);
             $table->string('serial_number');
             $table->timestamps();
 

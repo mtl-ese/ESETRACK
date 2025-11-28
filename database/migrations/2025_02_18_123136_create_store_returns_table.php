@@ -12,23 +12,18 @@ return new class extends Migration {
     {
         Schema::create('store_returns', function (Blueprint $table) {
             $table->id();
-            $table->string('store_requisition_id')->unique();
-            $table->string('old_client');
-            $table->string('location');
+            $table->unsignedBigInteger('recovery_requisition_id');
             $table->date('returned_on');
-            $table->unsignedBigInteger('was_created_by');
             $table->unsignedBigInteger('created_by');
-            $table->string('was_approved_by');
             $table->string('approved_by');
             $table->timestamps();
 
-            $table->foreign('store_requisition_id')
-                ->references('requisition_id')
-                ->on('store_requisitions')
+            $table->foreign('recovery_requisition_id')
+                ->references('recovery_requisition_id')
+                ->on('recovery_store_requisitions')
                 ->cascadeOnDelete();
 
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('was_created_by')->references('id')->on('users')->onDelete('cascade');
 
 
         });

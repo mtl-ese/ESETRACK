@@ -14,14 +14,19 @@ return new class extends Migration {
         Schema::create('acquired_items', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('acquired_id');
+            $table->unsignedBigInteger('purchase_item_id');
             $table->string('item_description');
             $table->unsignedInteger('quantity');
-            $table->unsignedInteger('balance');
             $table->timestamps();
 
             $table->foreign('acquired_id')
                 ->references('id')
                 ->on('acquireds')
+                ->onDelete('cascade');
+
+            $table->foreign('purchase_item_id')
+                ->references('id')
+                ->on('purchase_items')
                 ->onDelete('cascade');
         });
     }

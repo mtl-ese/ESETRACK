@@ -47,7 +47,7 @@
                             </td>
                             <td>
                                 <a href="{{ route('item.create',$item->purchase_requisition_id)}}">
-                                    {{ \Carbon\Carbon::parse($item->created_at)->format('d M Y') }}
+                                    {{ $item->created_at }}
                                 </a>
                             </td>
                         </tr>

@@ -34,18 +34,21 @@
                                     @php
                                         $number = 1;
                                     @endphp
-                                    @foreach ($serial_numbers as $serial_number)
+                                @foreach ($serial_numbers as $serial_record)
+                                    @if(is_array($serial_record->serial_number))
+                                        @foreach ($serial_record->serial_number as $serial)
+                                            <tr>
+                                                <td class="fw-bold">{{ $number++ }}</td>
+                                                <td class="fw-bold">{{ $serial }}</td>
+                                            </tr>
+                                        @endforeach
+                                    @else
                                         <tr>
-                                            <td class="fw-bold">
-
-                                                {{ $number++ }}
-
-                                            </td>
-                                            <td class="fw-bold">
-                                                {{ $serial_number->serial_number }}
-                                            </td>
+                                            <td class="fw-bold">{{ $number++ }}</td>
+                                            <td class="fw-bold">{{ $serial_record->serial_number }}</td>
                                         </tr>
-                                    @endforeach
+                                    @endif
+                                @endforeach
                                 </tbody>
                             </table>
                         </div>

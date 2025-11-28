@@ -39,7 +39,7 @@ class UserController extends Controller
             'first_name' => 'required|string|max:255',
             'last_name' => 'required|string|max:255',
             'email' => 'required|email|unique:users,email',
-            'DOB' => 'required|date|before:today',
+            'employee_number' => 'required|numeric|unique:users,employee_number',
         ]);
 
         //create a new user
@@ -73,7 +73,7 @@ class UserController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', $user->first_name.' '.$user->last_name. ' activated successfully.');
+            ->with('success', $user->first_name . ' ' . $user->last_name . ' activated successfully.');
     }
     public function deactivate(string $id)
     {
@@ -82,13 +82,14 @@ class UserController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', $user->first_name.' '.$user->last_name. ' deactivated successfully.');
+            ->with('success', $user->first_name . ' ' . $user->last_name . ' deactivated successfully.');
     }
     public function resetPassword(string $id)
     {
         $user = User::where('id', $id)->first();
         $user->update(['password
-        ' => 'password']);
+        ' => 'password'
+        ]);
 
         return redirect()
             ->back()
@@ -101,7 +102,7 @@ class UserController extends Controller
 
         return redirect()
             ->back()
-            ->with('success', $user->first_name.' '.$user->last_name. ' is now an admin.');
+            ->with('success', $user->first_name . ' ' . $user->last_name . ' is now an admin.');
     }
     public function revokeAdmin(string $id)
     {

@@ -12,14 +12,28 @@ return new class extends Migration {
     {
         Schema::create('recovery_store_requisition_items', function (Blueprint $table) {
             $table->id();
-            $table->string('recovery_requisition_id');
+            $table->unsignedBigInteger('recovery_requisition_id');
+            $table->unsignedBigInteger('store_item_id')->nullable();
+            $table->unsignedBigInteger('destination_link_id');
             $table->string('item_name');
-            $table->unsignedInteger('quantity');
+            $table->Integer('quantity')->default(0);
+            $table->integer('returned_quantity')->default(0);
+            $table->Integer('balance')->default(0);
             $table->timestamps();
 
             $table->foreign('recovery_requisition_id')
-                ->references('recovery_store_requisition_id')
+                ->references('recovery_requisition_id')
                 ->on('recovery_store_requisitions')
+                ->onDelete('cascade');
+
+            $table->foreign('store_item_id')
+                ->references('id')
+                ->on('store_items')
+                ->onDelete('cascade');
+
+            $table->foreign('destination_link_id')
+                ->references('id')
+                ->on('store_requisition_destination_links')
                 ->onDelete('cascade');
         });
     }

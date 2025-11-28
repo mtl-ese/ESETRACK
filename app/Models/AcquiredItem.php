@@ -8,13 +8,18 @@ class AcquiredItem extends Model
 {
     protected $fillable = [
         'acquired_id',
-        'balance',
+        'purchase_item_id',
         'item_description',
         'quantity'
     ];
 
     public function acquired()
     {
-        return $this->belongsTo(Acquired::class);
+        return $this->belongsTo(Acquired::class, 'acquired_id', 'id');
+    }
+
+    public function purchaseItem()
+    {
+        return $this->belongsTo(PurchaseItem::class, 'purchase_item_id', 'id');
     }
 }

@@ -25,7 +25,7 @@
                 <div class="col-lg-4">
                     <div class="gap-2 p-4">
                         <p><strong>Email:</strong> {{ $user->email }}</p>
-                        <p><strong>Created On:</strong> {{ \Carbon\Carbon::parse($user->created_at)->format('d M Y') }}
+                        <p><strong>Created On:</strong> {{ $user->created_at }}
                         </p>
                         <p><strong>Status:</strong> {{ $user->isActivated ? 'Activated' : 'Deactivated' }}</p>
                         <p><strong>Role:</strong>
@@ -40,7 +40,7 @@
                                 Active
                             @else
                                 @if ($user->last_seen_at != null)
-                                    Last seen: {{ \Carbon\Carbon::parse($user->last_seen_at)->diffForHumans() }}
+                                    Last seen: {{ $user->last_seen_at }}
                                 @else
                                     Last seen: Not available
                                 @endif

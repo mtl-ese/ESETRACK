@@ -26,8 +26,8 @@ class ImportUsers extends Command
 
         foreach ($csv as $row) {
             User::create([
-                'first_name' => $row['first_name'],
-                'last_name' => $row['last_name'],
+                'first_name' => ucfirst(strtolower($row['first_name'])), // Capitalize first letter
+                'last_name' => ucfirst(strtolower($row['last_name'])),   // Capitalize first letter
                 'email' => $row['email'],
                 'password' => Hash::make('password'), // Hash new passwords
                 'DOB' => $row['DOB'],

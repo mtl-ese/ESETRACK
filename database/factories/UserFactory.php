@@ -27,8 +27,8 @@ class UserFactory extends Factory
             'last_name' => "kapesa",
             'email' => "ettiness@mtl.mw",
             'password' => bcrypt('password'), // password
-            'created_at'=>"2023-05-16 14:00:00",
-            'updated_at'=>"2023-05-16 14:00:00"
+            'created_at' => "2023-05-16 14:00:00",
+            'updated_at' => "2023-05-16 14:00:00"
         ];
     }
 

@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use App\Policies\UserPolicy;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Carbon;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -24,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Set global date format to d-m-Y
+        Carbon::setToStringFormat('d-M-Y');
     }
 }

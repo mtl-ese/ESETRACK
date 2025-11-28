@@ -20,7 +20,7 @@ class User extends Authenticatable
         'first_name',
         'last_name',
         'email',
-        'DOB',
+        'employee_number',
         'password',
         'profile_image',
         'last_login_at',
@@ -52,6 +52,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'created_at' => 'date',
             'last_login_at' => 'datetime',
             'isAdmin' => 'boolean',
             'isActivated' => 'boolean',

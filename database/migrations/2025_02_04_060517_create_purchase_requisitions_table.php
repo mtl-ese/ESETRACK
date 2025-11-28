@@ -10,8 +10,9 @@ class CreatePurchaseRequisitionsTable extends Migration
     {
         Schema::create('purchase_requisitions', function (Blueprint $table) {
             $table->string('requisition_id')->primary();
+            $table->string('project_description');
             $table->unsignedBigInteger('created_by');
-            $table->timestamp('requested_on');
+            $table->date('requested_on');
             $table->string('approved_by');
             $table->timestamps();
 
@@ -19,7 +20,7 @@ class CreatePurchaseRequisitionsTable extends Migration
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');
         });
     }
-    
+
     public function down()
     {
         Schema::dropIfExists('purchase_requisitions');
