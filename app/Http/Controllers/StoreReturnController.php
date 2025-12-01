@@ -346,6 +346,10 @@ class StoreReturnController extends Controller
                         'item_serial_number_id' => $requisitionSerial->id,
                     ]);
 
+                    // Mark the requisition serial as returned so it is no longer available
+                    $requisitionSerial->returned = true;
+                    $requisitionSerial->save();
+
                     // Remove serial from RecoveryStoreSerialNumbers
                     $recoverySerial = RecoveryStoreSerialNumber::where('serial_numbers', $serial)->first();
                     if ($recoverySerial)
@@ -425,6 +429,10 @@ class StoreReturnController extends Controller
                     ['serial_numbers' => $requisitionSerial->serial_number],
                     ['recovery_store_id' => $recoveryStoreItem->id]
                 );
+
+                // Mark the requisition serial as not returned so it becomes available again
+                $requisitionSerial->returned = false;
+                $requisitionSerial->save();
 
                 // Optionally, you may unlink StoreReturnItemSerialNumber record
                 $link->delete();
@@ -547,6 +555,10 @@ class StoreReturnController extends Controller
                         'serial_numbers' => $serialNumber->serial_number,
                         'recovery_store_id' => $recoveryStoreItem->id,
                     ]);
+
+                    // Mark the requisition serial as not returned
+                    $serialNumber->returned = false;
+                    $serialNumber->save();
                 }
                 $link->delete();
             }
@@ -566,6 +578,10 @@ class StoreReturnController extends Controller
                         'store_return_item_id' => $item->id,
                         'item_serial_number_id' => $serialRecord->id,
                     ]);
+
+                    // Mark the requisition serial as returned
+                    $serialRecord->returned = true;
+                    $serialRecord->save();
                 }
 
                 // Remove from recovery store if exists

@@ -296,43 +296,43 @@ $requisition = StoreRequisition::where('requisition_id', $requisition_id)->first
 
 // Update requisition fields
 $requisition->update([
-    'approved_by' => $validated['approved_by'],
-    'item_diversion_note' => $validated['item_diversion_note'] ?? null,
-    'requested_on' => $validated['requisition_date'],
+'approved_by' => $validated['approved_by'],
+'item_diversion_note' => $validated['item_diversion_note'] ?? null,
+'requested_on' => $validated['requisition_date'],
 ]);
 
 // -------------------------------------
 // Load existing destination links
 // -------------------------------------
 $existingLinks = StoreRequisitionDestinationLink::where('store_requisition_id', $requisition_id)
-    ->with('destination')
-    ->get();
+->with('destination')
+->get();
 
 $validLinkIds = $existingLinks->pluck('id')->toArray();
 
 
 // Add new destinations
 if (!empty($validated['new_destinations'])) {
-    foreach ($validated['new_destinations'] as $dest) {
-        $destination = StoreRequisitionDestination::firstOrCreate([
-            'client' => $dest['client'],
-            'location' => $dest['location']
-        ]);
+foreach ($validated['new_destinations'] as $dest) {
+    $destination = StoreRequisitionDestination::firstOrCreate([
+        'client' => $dest['client'],
+        'location' => $dest['location']
+    ]);
 
-        $link = StoreRequisitionDestinationLink::firstOrCreate([
-            'store_requisition_id' => $requisition_id,
-            'destination_id' => $destination->id
-        ]);
+    $link = StoreRequisitionDestinationLink::firstOrCreate([
+        'store_requisition_id' => $requisition_id,
+        'destination_id' => $destination->id
+    ]);
 
-        $validLinkIds[] = $link->id;
-        $existingLinks->push($link);
-    }
+    $validLinkIds[] = $link->id;
+    $existingLinks->push($link);
+}
 }
 
 if ($request->deleted_items) {
-    $deletedIds = json_decode($request->deleted_items, true);
+$deletedIds = json_decode($request->deleted_items, true);
 
-    StoreItem::whereIn('id', $deletedIds)->delete();
+StoreItem::whereIn('id', $deletedIds)->delete();
 }
 
 
@@ -340,46 +340,46 @@ if ($request->deleted_items) {
 // Handle items
 // -------------------------------------
 if ($request->items) {
-    $items = json_decode($request->items, true);
+$items = json_decode($request->items, true);
 
-    foreach ($items as $item) {
-        $itemName = $item['item_name'];
-        $quantity = (int) ($item['quantity'] ?? 0);
-        $serialNumbers = $item['serialNumbers'] ?? [];
-        $destinationLinkId = $item['destination_link_id'] ?? null;
+foreach ($items as $item) {
+    $itemName = $item['item_name'];
+    $quantity = (int) ($item['quantity'] ?? 0);
+    $serialNumbers = $item['serialNumbers'] ?? [];
+    $destinationLinkId = $item['destination_link_id'] ?? null;
 
-        /* if (empty($destinationLinkId) || !in_array($destinationLinkId, $validLinkIds, true)) {
-             throw new \Exception("Invalid destination link {$destinationLinkId} for item {$itemName}");
-         }
-        if ($destinationLinkId === null) {
-            throw new \Exception("Invalid destination link {$destinationLinkId} for item {$itemName}");
-        }
-
-        // Allow new_X IDs
-        if (!str_starts_with($destinationLinkId, 'new_') && !in_array($destinationLinkId, $validLinkIds, true)) {
-            throw new \Exception("Invalid destination link {$destinationLinkId} for item {$itemName}");
-        }
-
-
-        if ($quantity <= 0) {
-            throw new \Exception("Quantity must be greater than 0 for {$itemName}");
-        }
-
-        // Use trait to handle both new and existing items safely
-        $this->createRequisitionItem([
-            'item_name' => $itemName,
-            'quantity' => $quantity,
-            'serialNumbers' => $serialNumbers,
-            'destination_link_id' => $destinationLinkId,
-        ], $requisition_id);
+    /* if (empty($destinationLinkId) || !in_array($destinationLinkId, $validLinkIds, true)) {
+         throw new \Exception("Invalid destination link {$destinationLinkId} for item {$itemName}");
+     }
+    if ($destinationLinkId === null) {
+        throw new \Exception("Invalid destination link {$destinationLinkId} for item {$itemName}");
     }
+
+    // Allow new_X IDs
+    if (!str_starts_with($destinationLinkId, 'new_') && !in_array($destinationLinkId, $validLinkIds, true)) {
+        throw new \Exception("Invalid destination link {$destinationLinkId} for item {$itemName}");
+    }
+
+
+    if ($quantity <= 0) {
+        throw new \Exception("Quantity must be greater than 0 for {$itemName}");
+    }
+
+    // Use trait to handle both new and existing items safely
+    $this->createRequisitionItem([
+        'item_name' => $itemName,
+        'quantity' => $quantity,
+        'serialNumbers' => $serialNumbers,
+        'destination_link_id' => $destinationLinkId,
+    ], $requisition_id);
+}
 }
 
 // Delete removed destination links
 if (!empty($validated['existing_destinations'])) {
-    StoreRequisitionDestinationLink::where('store_requisition_id', $requisition_id)
-        ->whereNotIn('id', $validated['existing_destinations'])
-        ->delete();
+StoreRequisitionDestinationLink::where('store_requisition_id', $requisition_id)
+    ->whereNotIn('id', $validated['existing_destinations'])
+    ->delete();
 }
 });
 
@@ -401,6 +401,77 @@ return redirect()->back()->with('error', $e->getMessage())->withInput();
             'new_destinations.*.client' => ['required_with:new_destinations', 'string'],
             'new_destinations.*.location' => ['required_with:new_destinations', 'string'],
         ]);
+
+        // ------------------ No-change detection ------------------
+        $hasChanges = false;
+
+        $requisition = StoreRequisition::where('requisition_id', $requisition_id)->firstOrFail();
+
+        $existingDate = $requisition->requested_on ? date('Y-m-d', strtotime($requisition->requested_on)) : null;
+        if (
+            $requisition->approved_by !== $validated['approved_by'] ||
+            ($validated['item_diversion_note'] ?? null) !== ($requisition->item_diversion_note ?? null) ||
+            $existingDate !== $validated['requisition_date']
+        ) {
+            $hasChanges = true;
+        }
+
+        // If deleted items or new destinations provided, it's a change
+        if ($request->deleted_items || !empty($validated['new_destinations'])) {
+            $hasChanges = true;
+        }
+
+        // Compare items if provided - normalize and compare with DB
+        if (!$hasChanges && $request->items) {
+            $submittedItems = json_decode($request->items, true) ?: [];
+
+            // Build existing destination item entries from DB
+            $existingEntries = [];
+            $storeItems = StoreItem::where('store_requisition_id', $requisition_id)->with('destinationItems')->get();
+            foreach ($storeItems as $si) {
+                foreach ($si->destinationItems as $di) {
+                    $serials = $di->serials;
+                    if (is_string($serials)) {
+                        $decoded = json_decode($serials, true);
+                        $serials = $decoded === null ? [] : $decoded;
+                    }
+                    $existingEntries[] = [
+                        'destination_link_id' => (int) $di->destination_link_id,
+                        'quantity' => (int) $di->quantity,
+                        'serials' => array_values(array_map('strval', (array) $serials)),
+                    ];
+                }
+            }
+
+            $submittedEntries = [];
+            foreach ($submittedItems as $it) {
+                $submittedEntries[] = [
+                    'destination_link_id' => is_numeric($it['destination_link_id'] ?? null) ? (int) $it['destination_link_id'] : ($it['destination_link_id'] ?? null),
+                    'quantity' => (int) ($it['quantity'] ?? 0),
+                    'serials' => array_values(array_map('strval', (array) ($it['serialNumbers'] ?? []))),
+                ];
+            }
+
+            // Normalize by sorting serial lists and sort entries for stable comparison
+            $normalize = function ($arr) {
+                foreach ($arr as &$e) {
+                    sort($e['serials']);
+                }
+                usort($arr, fn($a, $b) => ($a['destination_link_id'] <=> $b['destination_link_id']));
+                return $arr;
+            };
+
+            $normExisting = $normalize($existingEntries);
+            $normSubmitted = $normalize($submittedEntries);
+
+            if (json_encode($normExisting) !== json_encode($normSubmitted)) {
+                $hasChanges = true;
+            }
+        }
+
+        if (!$hasChanges) {
+            return redirect()->back()->with('error', 'Nothing was changed. Please adjust at least one return quantity or serial selection.')->withInput();
+        }
 
         try {
             DB::transaction(function () use ($validated, $request, $requisition_id) {

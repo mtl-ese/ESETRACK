@@ -6,7 +6,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Hash;
-
+/**
+ * @property int $id
+ * @property string $first_name
+ * @property string $last_name
+ * @property string $email
+ * @property string|null $employee_number
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PurchaseRequisition[] $PurchaseRequisitions
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\StoreRequisition[] $StoreRequisitions
+ */
 class User extends Authenticatable
 {
     use HasFactory, Notifiable;

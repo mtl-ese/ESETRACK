@@ -401,11 +401,10 @@ class RecoveryStoreRequisitionController extends Controller
         $availableSerials = $this->getAvailableSerialsByItem($recovery->store_requisition_id);
 
         $items = $allDestinationItems->map(function ($destItem) use ($recovery, $availableSerials) {
-            // Find existing recovery item for this destination
-            $existingRecoveryItem = $recovery->items->first(function ($item) use ($destItem) {
-                return $item->store_item_id == $destItem['store_item_id'] &&
-                    $item->destination_link_id == $destItem['destination_link_id'];
-            });
+            // Find existing recovery item for this destination (match by store_item_id and destination_link_id)
+            $existingRecoveryItem = $recovery->items
+                ->where('store_item_id', $destItem['store_item_id'])
+                ->firstWhere('destination_link_id', $destItem['destination_link_id']);
 
             // Calculate already recovered for this specific destination (including ALL recoveries)
             // Use item_name as fallback since store_item_id might be inconsistent in old data
@@ -487,6 +486,56 @@ class RecoveryStoreRequisitionController extends Controller
             'serials' => ['nullable', 'array'],
             'serials.*.*' => ['string'],
         ]);
+
+        // No-change detection: compare main fields and items layout
+        $hasChanges = false;
+
+        $existingDate = $recovery->recovered_on ? date('Y-m-d', strtotime($recovery->recovered_on)) : null;
+        if (($recovery->approved_by ?? null) !== $validated['approved_by'] || $existingDate !== $validated['recovery_date']) {
+            $hasChanges = true;
+        }
+
+        // Compare submitted items structure with existing recovery items
+        if (!$hasChanges) {
+            $submittedItems = $validated['items'] ?? [];
+
+            // Build existing entries keyed by destination_item_id or store item
+            $existingEntries = [];
+            foreach ($recovery->items as $item) {
+                $serials = $item->serial_numbers->map(fn($s) => (string) $s->serial_number)->filter()->unique()->values()->all();
+                $existingEntries[] = [
+                    'destination_item_id' => $item->id,
+                    'store_item_id' => $item->store_item_id,
+                    'quantity' => (int) $item->quantity,
+                    'serials' => $serials,
+                ];
+            }
+
+            $submittedEntries = [];
+            foreach ($submittedItems as $key => $it) {
+                $submittedEntries[] = [
+                    'destination_item_id' => $it['destination_item_id'] ?? null,
+                    'store_item_id' => $it['store_item_id'] ?? null,
+                    'quantity' => (int) ($it['quantity'] ?? 0),
+                    'serials' => array_values(array_map('strval', (array) ($request->input('serials.' . $key, []) ?? []))),
+                ];
+            }
+
+            $normalize = function ($arr) {
+                foreach ($arr as &$e)
+                    sort($e['serials']);
+                usort($arr, fn($a, $b) => (($a['destination_item_id'] ?? 0) <=> ($b['destination_item_id'] ?? 0)));
+                return $arr;
+            };
+
+            if (json_encode($normalize($existingEntries)) !== json_encode($normalize($submittedEntries))) {
+                $hasChanges = true;
+            }
+        }
+
+        if (!$hasChanges) {
+            return redirect()->back()->with('error', 'Nothing was changed. Please adjust at least one return quantity or serial selection.')->withInput();
+        }
 
         try {
             DB::transaction(function () use ($validated, $recovery) {

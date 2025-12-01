@@ -4,6 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+/**
+ * @property int $id
+ * @property int $store_return_id
+ * @property int|null $destination_link_id
+ * @property string $item_name
+ * @property int $quantity
+ * @property int|null $balance
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\StoreReturnItemSerialNumber[] $serial_numbers
+ */
 class StoreReturnItem extends Model
 {
     protected $fillable = [

@@ -7,6 +7,16 @@ use App\Models\RecoveryStoreRequisition;
 use App\Models\RecoveryStoreRequisitionItemSerialNumber;
 
 class RecoveryStoreRequisitionItem extends Model
+    /**
+     * @property int $id
+     * @property int $item_id
+     * @property int $recovery_requisition_id
+     * @property string $item_name
+     * @property int $quantity
+     * @property int|null $returned_quantity
+     * @property int|null $destination_link_id
+     * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecoveryStoreRequisitionItemSerialNumber[] $serial_numbers
+     */
 {
     protected $fillable = [
         'recovery_requisition_id',

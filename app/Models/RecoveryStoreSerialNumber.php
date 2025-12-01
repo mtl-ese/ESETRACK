@@ -5,6 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class RecoveryStoreSerialNumber extends Model
+
+    /**
+     * @property int $id
+     * @property int $recovery_store_id
+     * @property string $serial_numbers
+     */
 {
     protected $fillable = [
         'recovery_store_id',

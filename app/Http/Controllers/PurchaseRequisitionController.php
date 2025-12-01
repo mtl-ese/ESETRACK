@@ -141,6 +141,49 @@ class PurchaseRequisitionController extends Controller
             'items' => ['nullable', 'json']
         ]);
 
+        // Quick no-change detection: compare top-level fields and items payload with existing DB state
+        $hasChanges = false;
+
+        // Compare basic fields
+        $existingDate = $requisition->requested_on ? date('Y-m-d', strtotime($requisition->requested_on)) : null;
+        if (
+            $requisition->project_description !== $validated['project_description'] ||
+            $requisition->approved_by !== $validated['approved_by'] ||
+            $existingDate !== $validated['requisition_date']
+        ) {
+            $hasChanges = true;
+        }
+
+        // Compare items if provided
+        $submittedItems = [];
+        if ($request->items) {
+            $submittedItems = json_decode($request->items, true) ?? [];
+        }
+
+        $existingItems = PurchaseItem::where('purchase_requisition_id', $requisition_id)
+            ->get(['item_description', 'quantity'])
+            ->map(function ($i) {
+                return ['item_description' => $i->item_description, 'quantity' => (int) $i->quantity];
+            })->values()->all();
+
+        if (!$hasChanges) {
+            // Normalize and compare items arrays
+            $normSubmitted = collect($submittedItems)->map(function ($it) {
+                return ['item_description' => $it['item_description'] ?? '', 'quantity' => (int) ($it['quantity'] ?? 0)];
+            })->values()->all();
+
+            // Compare by JSON stable encoding after sorting
+            $compare = json_encode(collect($normSubmitted)->sortBy('item_description')->values()->all()) !==
+                json_encode(collect($existingItems)->sortBy('item_description')->values()->all());
+
+            if ($compare)
+                $hasChanges = true;
+        }
+
+        if (!$hasChanges) {
+            return redirect()->back()->with('error', 'Nothing was changed. Please adjust at least one return quantity or serial selection.')->withInput();
+        }
+
         // Update requisition details
         $requisition->update([
             'project_description' => $validated['project_description'],

@@ -190,6 +190,23 @@ class AcquiredController extends Controller
 
         $acquired = Acquired::with('items.purchaseItem')->findOrFail($id);
 
+        // Detect no-change: if every submitted quantity equals existing acquired item quantity
+        $submitted = array_map('intval', $request->quantities ?? []);
+        $existing = $acquired->items->mapWithKeys(fn($it) => [$it->id => (int) $it->quantity])->toArray();
+
+        $hasChanges = false;
+        foreach ($submitted as $itemId => $qty) {
+            $existingQty = $existing[$itemId] ?? null;
+            if ($existingQty === null || $existingQty !== $qty) {
+                $hasChanges = true;
+                break;
+            }
+        }
+
+        if (!$hasChanges) {
+            return redirect()->back()->with('error', 'Nothing was changed. Please adjust at least one return quantity or serial selection.')->withInput();
+        }
+
         try {
             DB::transaction(function () use ($request, $acquired) {
                 foreach ($request->quantities as $itemId => $quantity) {

@@ -47,9 +47,9 @@
                                     @endphp
                                     @foreach ($recoveries as $recovery)
                                         <tr>
-                                            <td class="text-decoration-none fw-bold">{{ $number++ }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $recovery->store_requisition_id }}</td>
-                                            <td class="text-decoration-none fw-bold">
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $number++ }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $recovery->store_requisition_id }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">
                                             @php
                                                 $requisition = $recovery->store_requisition;
                                                 $clients = $requisition->items
@@ -60,9 +60,9 @@
                                             @endphp
                                                 {{ $clients ? $clients : 'N/A' }}
                                             </td>
-                                            <td class="text-decoration-none fw-bold">{{ $recovery->creator->first_name }} {{ $recovery->creator->last_name }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $recovery->recovered_on }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $recovery->approved_by }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $recovery->creator->first_name }} {{ $recovery->creator->last_name }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $recovery->recovered_on }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $recovery->approved_by }}</td>
                                             <td class="text-center">
                                                 <!-- View Button -->
                                                 <a href="{{ route('recovery-items.index', ['requisition_id' => $recovery->recovery_requisition_id]) }}" style="text-decoration:none">

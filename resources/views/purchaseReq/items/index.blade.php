@@ -11,7 +11,7 @@
         <!-- Purchase Requisition ID: {{ $items[0]->purchase_requisition_id }} -->
         @else
 
-        No data on {{ session('requisition_id') }}, click the + icon to add items
+        No data on {{ session('requisition_id') }}
         @endif
 
     </h5>

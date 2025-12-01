@@ -43,11 +43,11 @@ use Illuminate\Support\Arr;
 @php $number = 1; @endphp
 @foreach ($items as $item)
 <tr>
-    <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $number++ }}</td>
-    <td class="fw-bold" style="color: #007bff;">{{ $item->item_name }}</td>
-    <td class="fw-bold" style="color: #007bff;">{{ $item->quantity }}</td>
-    <td class="fw-bold" style="color: #007bff;">{{ $item->destination_info ?? 'N/A' }}</td>
-    <td class="fw-bold" style="color: #007bff;">
+    <td class="text-decoration-none fw-bold">{{ $number++ }}</td>
+    <td class="fw-bold">{{ $item->item_name }}</td>
+    <td class="fw-bold">{{ $item->quantity }}</td>
+    <td class="fw-bold">{{ $item->destination_info ?? 'N/A' }}</td>
+    <td class="fw-bold">
         @php
             $serialNumbers = [];
             // Collect serials from all destinationItems for this item

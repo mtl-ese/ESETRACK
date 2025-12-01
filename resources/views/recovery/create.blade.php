@@ -14,15 +14,24 @@
         <div class="mb-4">
     <label for="requisition_select" class="form-label"><strong>Select Store Requisition</strong></label>
     <div class="input-group">
-        <input type="text" class="form-control" id="requisition_select" name="requisition_id" 
-               list="requisitions-list" placeholder="Select or enter requisition ID..." 
-               autocomplete="off" value="{{ old('requisition_id') }}">
-        <datalist id="requisitions-list">
-            @foreach($requisitions as $req)
-                <option value="{{ $req['requisition_id'] }}" label="{{ $req['clients_label'] }}"></option>
-            @endforeach
-        </datalist>
-        <button class="btn btn-primary" type="button" id="load_materials">Load Materials</button>
+        @if(collect($requisitions)->isEmpty())
+            <input type="text" class="form-control" id="requisition_select" name="requisition_id"
+                   list="requisitions-list" placeholder="No store requisitions to recover from"
+                   autocomplete="off" value="" disabled>
+            <datalist id="requisitions-list"></datalist>
+            <button class="btn btn-primary" type="button" id="load_materials" disabled>Load Materials</button>
+            <div class="form-text text-muted">There are no store requisitions to recover from.</div>
+        @else
+            <input type="text" class="form-control" id="requisition_select" name="requisition_id" 
+                   list="requisitions-list" placeholder="Select or enter requisition ID..." 
+                   autocomplete="off" value="{{ old('requisition_id') }}">
+            <datalist id="requisitions-list">
+                @foreach($requisitions as $req)
+                    <option value="{{ $req['requisition_id'] }}" label="{{ $req['clients_label'] }}"></option>
+                @endforeach
+            </datalist>
+            <button class="btn btn-primary" type="button" id="load_materials">Load Materials</button>
+        @endif
     </div>
 </div>
 
@@ -218,7 +227,7 @@ function renderMaterialsTable() {
             ? `
                 <div class="serial-selector position-relative" data-serial-container data-material-id="${material.id}">
                     <button type="button" class="btn btn-sm btn-outline-primary serial-toggle">Select Serial</button>
-                    <div class="serial-dropdown card shadow-sm p-3" style="display: none; position: absolute; z-index: 1000; top: 40px; left: 0; min-width: 220px; max-height: 240px; overflow-y: auto;">
+                    <div class="serial-dropdown card shadow-sm p-3" style="display: none; position: relative; z-index: 1000; top: 40px; left: 0; min-width: 220px; max-height: 240px; overflow-y: auto;">
                         ${serialOptions || '<p class="mb-0 text-muted">No serials available</p>' }
                     </div>
                 </div>

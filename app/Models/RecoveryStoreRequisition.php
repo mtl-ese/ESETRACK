@@ -5,6 +5,14 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use App\Models\StoreRequisitionDestination;
 
+/**
+ * @property int $id
+ * @property int $recovery_requisition_id
+ * @property int $store_requisition_id
+ * @property string|null $old_client
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\RecoveryStoreRequisitionItem[] $items
+ * @property-read \App\Models\StoreRequisitionDestinationLink $destinationLink
+ */
 class RecoveryStoreRequisition extends Model
 {
     protected $primaryKey = 'recovery_requisition_id';

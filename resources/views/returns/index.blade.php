@@ -46,11 +46,11 @@
                                     @endphp
                                     @foreach ($stores as $store)
                                         <tr>
-                                            <td class="text-decoration-none fw-bold">{{ $number++ }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $store->recovery_store_requisition?->store_requisition_id }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $store->creator->first_name }} {{ $store->creator->last_name }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $store->returned_on }}</td>
-                                            <td class="text-decoration-none fw-bold">{{ $store->approved_by }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $number++ }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $store->recovery_store_requisition?->store_requisition_id }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $store->creator->first_name }} {{ $store->creator->last_name }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $store->returned_on }}</td>
+                                            <td class="text-decoration-none fw-bold" style="color: #007bff;">{{ $store->approved_by }}</td>
 
                                             <td class="text-center">
                                                 <!-- View Button -->

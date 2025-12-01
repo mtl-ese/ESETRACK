@@ -89,7 +89,7 @@ class StoreItemController extends Controller
                 }
             });
 
-            return redirect()->route('store.show', $request->requisition_id)
+            return redirect()->route('store.index', $request->requisition_id)
                 ->with('success', 'All items added successfully');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage())->withInput();

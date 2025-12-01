@@ -1,0 +1,12 @@
+{
+    // Exclude vendor and other large directories from Intelephense and file indexing
+    "intelephense.files.exclude": [
+        "**/vendor/**",
+        "**/node_modules/**",
+        "**/.git/**"
+    ],
+    "files.exclude": {
+        "**/vendor": true,
+        "**/node_modules": true
+    }
+}

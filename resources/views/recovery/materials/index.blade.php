@@ -19,7 +19,7 @@
         <div class="col-12">
             <div class="card bg-light bg-opacity-50">
                 <div class="card-header border-bottom-1">
-                    <h3 class="card-title mt-2 text-lg"><strong>recovered Materials</strong></h3>         
+                    <h3 class="card-title mt-2 text-lg"><strong>Recovered Materials</strong></h3>         
                 </div>
                 <div class="card-body bg-light bg-opacity-50">
                     <div class="table-responsive">
