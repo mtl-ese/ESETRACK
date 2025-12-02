@@ -20,7 +20,7 @@
                    autocomplete="off" value="" disabled>
             <datalist id="requisitions-list"></datalist>
             <button class="btn btn-primary" type="button" id="load_materials" disabled>Load Materials</button>
-            <div class="form-text text-muted">There are no store requisitions to recover from.</div>
+            
         @else
             <input type="text" class="form-control" id="requisition_select" name="requisition_id" 
                    list="requisitions-list" placeholder="Select or enter requisition ID..." 

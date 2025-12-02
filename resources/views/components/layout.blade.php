@@ -270,9 +270,17 @@
             </li>
             <li class="nav-item mb-2" title="Recovery Storage">
                 <x-nav-link :active="request()->routeIs('recovered.index')" href="{{ route('recovered.index') }}">
-                    <img src="{{ asset('images/return-storage.gif') }}" alt="Recovered"
-                        class="rounded-5 bg-transparent me-1" style="max-height: 21px;">
+                    <img src="{{ asset('images/recover.png') }}" alt="Recovered"
+                        class="rounded-5 bg-white me-1" style="max-height: 21px;">
+                    
                     Recovery Storage
+                </x-nav-link>
+            </li>
+             <li class="nav-item mb-2" title="Returns Storage">
+                <x-nav-link :active="request()->routeIs('return.index')" href="{{ route('return.index') }}">
+                    <img src="{{ asset('images/return-storage.gif') }}" alt="Returned"
+                        class="rounded-5 bg-transparent me-1" style="max-height: 21px;">
+                    Returns Storage
                 </x-nav-link>
             </li>
             <li class="nav-item mb-2" title="Acquired Items">

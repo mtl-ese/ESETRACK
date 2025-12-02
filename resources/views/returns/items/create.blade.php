@@ -57,12 +57,7 @@
         }
 
         $(document).ready(function() {
-            // Define the array of item descriptions that require serial numbers.
-            const itemsRequiringSerial = ["powerbeam radios", "nanobeam radios", "cisco routers",
-                "cisco switches", "mikrotik routers", "mikrotik switches", "rockets",
-                "media converters",
-                "cambium radios"
-            ]; // Add or modify items as needed
+            // Serial inputs are shown only via an explicit checkbox (if present)
 
             // Function to update the serial number fields based on item description and quantity
             function updateSerialFields() {
@@ -71,8 +66,9 @@
                 let container = $('#serialNumbersContainer');
                 container.empty();
 
-                // Check if the item description contains any of the strings in the array
-                if (itemsRequiringSerial.some(serialItem => itemDesc.includes(serialItem))) {
+                // Show serial inputs only when a 'serialnumber' checkbox exists and is checked
+                const serialCheckbox = $('#serialnumber');
+                if (serialCheckbox.length && serialCheckbox.is(':checked')) {
                     for (let i = 1; i <= quantity; i++) {
                         container.append(`
                 <div class="mb-3">
@@ -86,6 +82,8 @@
 
             // Trigger the update when item description or quantity changes
             $('#item, #quantity').on('input', updateSerialFields);
+            // Also update when the serial checkbox (if present) changes
+            $('#serialnumber').on('change', updateSerialFields);
 
             // Trigger an initial update
             updateSerialFields();

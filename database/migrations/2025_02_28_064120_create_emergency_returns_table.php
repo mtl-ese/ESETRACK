@@ -13,6 +13,7 @@ return new class extends Migration {
         Schema::create('emergency_returns', function (Blueprint $table) {
             $table->id();
             $table->string('emergency_requisition_id');
+            $table->date('returned_on')->nullable();
             $table->timestamps();
 
             $table->foreign('emergency_requisition_id')

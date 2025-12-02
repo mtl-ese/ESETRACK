@@ -20,7 +20,8 @@ class EmergencyReturnController extends Controller
     {
         //validate the requisition id
         $validated = $request->validate([
-            'requisition_id' => 'string'
+            'requisition_id' => 'string',
+            'requisition_date' => ['required', 'date', 'before_or_equal:today'],
         ]);
 
         //check if that id exist in emergency requisitions
@@ -48,6 +49,7 @@ class EmergencyReturnController extends Controller
                 ->back()
                 ->with('error', $validated['requisition_id'] . ' has already been returned');
         }
+
 
         return view('emergency.return.show', [
             'identity' => $identity,

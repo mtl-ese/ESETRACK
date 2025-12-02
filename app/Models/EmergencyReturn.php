@@ -7,7 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class EmergencyReturn extends Model
 {
     protected $fillable = [
-        'emergency_requisition_id'
+        'emergency_requisition_id',
+        'returned_on'
     ];
 
     public function requisition()
@@ -15,5 +16,8 @@ class EmergencyReturn extends Model
         return $this
             ->belongsTo(EmergencyRequisition::class, 'emergency_requisition_id', 'requisition_id');
     }
+    protected $casts = [
+        'returned_on' => 'date'
+    ];
 }
 

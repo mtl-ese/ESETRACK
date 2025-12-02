@@ -16,6 +16,7 @@ return new class extends Migration {
             $table->string('department');
             $table->unsignedBigInteger('created_by');
             $table->string('approved_by');
+            $table->date('requested_on')->nullable();
             $table->timestamp('returned_on')->nullable();
             $table->timestamps();
 

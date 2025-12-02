@@ -18,6 +18,8 @@ use App\Http\Controllers\RecoveryStoreRequisitionItemController;
 use App\Http\Controllers\RecoveryStoreRequisitionItemSerialNumberController;
 use App\Http\Controllers\RecoveryStoreController;
 use App\Http\Controllers\RecoveryStoreSerialNumberController;
+use App\Http\Controllers\ReturnsStoreController;
+use App\Http\Controllers\ReturnsStoreserialNumberController;
 use App\Http\Controllers\StoreItemController;
 use App\Http\Controllers\StoreRequisitionController;
 use App\Http\Controllers\StoreReturnController;
@@ -425,6 +427,11 @@ Route::post('/emergency/store', [EmergencyRequisitionController::class, 'store']
     ->name('emergencyStore')
     ->middleware(['auth', 'prevent.back.history']);
 
+// Materials route must come BEFORE the dynamic {requisition_id} route
+Route::get('/emergency/materials', [EmergencyRequisitionItemController::class, 'materialsIndex'])
+    ->name('emergency.materials.index')
+    ->middleware(['auth', 'prevent.back.history']);
+
 Route::post('/emergency/destroy/{requisition_id}', [EmergencyRequisitionController::class, 'destroy'])
     ->name('emergencyDestroy')
     ->middleware(['auth', 'prevent.back.history', 'isAdmin']);
@@ -432,6 +439,15 @@ Route::post('/emergency/destroy/{requisition_id}', [EmergencyRequisitionControll
 Route::post('/emergency/search', [EmergencyRequisitionController::class, 'search'])
     ->name('emergencySearch')
     ->middleware(['auth', 'prevent.back.history']);
+
+Route::get('/emergency/edit/{requisition_id}', [EmergencyRequisitionController::class, 'editForm'])
+    ->name('emergency.edit-form')
+    ->middleware('auth', 'prevent.back.history', 'isAdmin');
+
+Route::post('/emergency/update/{requisition_id}', [EmergencyRequisitionController::class, 'updateAll'])
+    ->name('emergency.update-all')
+    ->middleware('auth', 'prevent.back.history', 'isAdmin');
+
 
 
 
@@ -471,6 +487,28 @@ Route::post('/emergency/return/store', [EmergencyReturnController::class, 'store
 Route::post('/emergency/return/confirm/', [EmergencyReturnController::class, 'confirm'])
     ->name('emergencyReturnConfirm')
     ->middleware(['auth', 'prevent.back.history']);
+
+//return stores routes
+
+Route::post('return/store', [ReturnsStoreController::class, 'store'])
+    ->name('return.store')
+    ->middleware('auth');
+
+Route::get('return/', [ReturnsStoreController::class, 'index'])
+    ->name('return.index')
+    ->middleware('auth');
+
+Route::post('return/search', [ReturnsStoreController::class, 'search'])
+    ->name('return.search')
+    ->middleware('auth');
+
+//return stores serial numbers routes
+Route::get('return/serial/{returns_store_id}', [ReturnsStoreSerialNumberController::class, 'index'])
+    ->name('serial.index')
+    ->middleware('auth');
+
+
+
 
 
 

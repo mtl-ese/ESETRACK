@@ -36,7 +36,7 @@
         <input type="text" class="form-control" id="approvedBy" name="approved_by"
           placeholder="Enter Approver's Name" required value="{{ old('approved_by') }}">
       </div>
-       <div class="mb-3">
+      <div class="mb-3">
         <label for="requisitionDate" class="form-label"><strong>Requisition date</strong></label>
         <input type="date" class="form-control" id="requisitionDate" name="requisition_date"
           placeholder="Enter Requisition Date" required max="{{ date('Y-m-d') }}" value="{{ old('requisition_date') }}">

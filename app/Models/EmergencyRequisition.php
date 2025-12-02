@@ -16,12 +16,14 @@ class EmergencyRequisition extends Model
         'department',
         'created_by',
         'approved_by',
+        'requested_on',
         'returned_on'
     ];
 
     protected function casts(): array
     {
         return [
+            'requested_on' => 'date',
             'returned_on' => 'datetime',
         ];
     }
@@ -39,7 +41,7 @@ class EmergencyRequisition extends Model
 
     public function return()
     {
-        return $this->hasOne(EmergencyReturn::class,'emergency_requisition_id','requisition_id');
+        return $this->hasOne(EmergencyReturn::class, 'emergency_requisition_id', 'requisition_id');
     }
 
 }

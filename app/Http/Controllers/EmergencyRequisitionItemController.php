@@ -7,6 +7,7 @@ use App\Models\EmergencyRequisitionItem;
 use App\Models\EmergencyRequisitionItemSerial;
 use App\Models\ReturnsStore;
 use App\Models\ReturnsStoreSerialNumber;
+use Illuminate\Support\Facades\DB;
 use App\Models\Store;
 use Illuminate\Http\Request;
 
@@ -22,20 +23,35 @@ class EmergencyRequisitionItemController extends Controller
         ]);
     }
 
-    public function create($requisition_id)
+    public function materialsIndex()
     {
-
-        return view('emergency.items.create', [
-            'requisition_id' => $requisition_id
+        $emergencyItems = EmergencyRequisitionItem::with('requisition')->latest()->get();
+        return view('emergency.materials.index', [
+            'emergencyItems' => $emergencyItems
         ]);
     }
 
-    public function store(Request $request)
+    public function create($requisition_id)
+    {
+        $stores = Store::select('id', 'item_name')->distinct()->orderBy('item_name')->get();
+        $returnsStores = ReturnsStore::select('id', 'item_name')->distinct()->orderBy('item_name')->get();
+
+        return view('emergency.items.create', [
+            'requisition_id' => $requisition_id,
+            'stores' => $stores,
+            'returnsStores' => $returnsStores
+        ]);
+    }
+
+    public function store(Request $request, $requisition_id = null)
     {
 
 
+        // determine requisition id (from route parameter or request payload)
+        $requisitionId = $requisition_id ?? $request->requisition_id;
+
         //check if id exists
-        $id = EmergencyRequisition::where('requisition_id', $request->requisition_id)->first();
+        $id = EmergencyRequisition::where('requisition_id', $requisitionId)->first();
         if (!$id) {
             return redirect()
                 ->back()
@@ -43,195 +59,145 @@ class EmergencyRequisitionItemController extends Controller
                 ->withInput();
         }
 
-        //check if item is already stored
-        $item = EmergencyRequisitionItem::where('item_name', $request->item_name)->where('emergency_requisition_id', $request->requisition_id)->first();
-        if ($item) {
-            return redirect()
-                ->back()
-                ->with('error', $request->item_name . ' is already stored in this emergency requisition.')
-                ->withInput();
-        }
-        //initialize the booleans
-        $new = false;
-        $old = false;
-        $filled = false;
-
-        //validate
-
-        if ($request->filled('serialNumbers')) {
-            $validated = $request->validate([
-                'item_description' => ['required', 'string'],
-                'quantity' => ['required', 'min:1'],
-                'from' => ['required', 'in:stores,return stores'],
-                'serialNumbers' => ['array'],
-                'serialNumbers.*' => 'required|distinct|string|min:2|max:50'
-            ]);
-
-            $filled = true;
+        // Accept both single item submissions (legacy) and batched JSON 'items'
+        $itemsPayload = null;
+        if ($request->filled('items')) {
+            $itemsPayload = json_decode($request->items, true);
+            if (!is_array($itemsPayload)) {
+                return redirect()->back()->with('error', 'Invalid items payload')->withInput();
+            }
         } else {
-            $validated = $request->validate([
-                'item_description' => ['required', 'string'],
-                'quantity' => ['required', 'min:1'],
-                'from' => ['required', 'in:stores,return stores']
-            ]);
+            // convert single submission into an array for unified processing
+            $single = [
+                'item_name' => $request->input('item_name') ?? $request->input('item_description'),
+                'quantity' => $request->input('quantity'),
+                'from' => $request->input('from'),
+                'serialNumbers' => $request->input('serialNumbers') ?? [],
+                'will_return' => $request->input('will_return') ?? null,
+            ];
+            $itemsPayload = [$single];
         }
 
-
-        // check if item is new or old based on the from value.
-        if ($validated['from'] == 'stores') {
-            $new = true;
-        }
-        if ($validated['from'] == 'return stores') {
-            $old = true;
-        }
-
-        //if new, check if that item is available in stores with right quantity
-        if ($new) {
-            $item = Store::where('item_name', $validated['item_description'])->first();
-            if ($item == null) {
-                return redirect()
-                    ->back()
-                    ->with('error', $validated['item_description'] . ' is not available in stores')
-                    ->withInput();
-            }
-
-            $balance = $item->quantity - $validated['quantity'];
-            if ($balance < 0) {
-                return redirect()
-                    ->back()
-                    ->with('error', 'The requested quantity is more than what is available in stores. Current quantity for ' . $validated['item_description'] . ' is ' . $item->quantity)
-                    ->withInput();
-            }
-
-            //store the item
-            EmergencyRequisitionItem::create([
-                'emergency_requisition_id' => $request->requisition_id,
-                'item_name' => $validated['item_description'],
-                'quantity' => $validated['quantity'],
-                'from' => $validated['from'],
-                'same_to_return' => $request->will_return === 'on' ? 1 : 0,
-            ]);
-
-
-            //if item has serial numbers
-            if ($filled) {
-
-
-                //get the recent created item
-                $emergencyItem = EmergencyRequisitionItem::where('item_name', $validated['item_description'])
-                    ->where('emergency_requisition_id', $request->requisition_id)
-                    ->first();
-
-                foreach ($validated['serialNumbers'] as $serial) {
-
-                    //add the serial numbers to the item
-                    EmergencyRequisitionItemSerial::create([
-                        'item_id' => $emergencyItem->id,
-                        'serial_number' => $serial
-                    ]);
-                }
-            }
-
-
-            //update in stores
-            $item->update([
-                'quantity' => $balance
-            ]);
-        }
-
-        //if old, check if item is available in return stores
-        if ($old) {
-
-            $item = ReturnsStore::where('item_name', $validated['item_description'])->first();
-
-            if ($item == null) {
-                return redirect()
-                    ->back()
-                    ->with('error', $validated['item_description'] . ' is not available in return stores')
-                    ->withInput();
-            }
-
-            $balance = $item->quantity - $validated['quantity'];
-
-            if ($balance < 0) {
-                return redirect()
-                    ->back()
-                    ->with('error', 'The requested quantity is more than what is available in return stores.
-                 Current quantity for ' . $validated['item_description'] . ' is ' . $item->quantity)
-                    ->withInput();
-            }
-
-            //update in return stores
-            $item->quantity = $balance;
-
-            //if item has serial numbers, update the return stores accordingly
-            if ($filled) {
-
-                //check if the provided serial numbers are available
-                $serial_numbers = ReturnsStoreSerialNumber::where('returns_store_id', $item->id)
-                    ->pluck('serial_numbers')
-                    ->toArray();
-
-                if (empty(array_diff($validated['serialNumbers'], $serial_numbers))) {
-                } else {
-                    return redirect()
-                        ->back()
-                        ->with('error', 'The serial number(s) do not match those in return stores for ' . $validated['item_description'])
-                        ->withInput();
-                }
-
-                $item->save();
-
-                //store the item
-                EmergencyRequisitionItem::create([
-                    'emergency_requisition_id' => $request->requisition_id,
-                    'item_name' => $validated['item_description'],
-                    'quantity' => $validated['quantity'],
-                    'from' => $validated['from'],
-                    'same_to_return' => $request->will_return === 'on' ? 1 : 0,
-
+        // Process all items transactionally
+        DB::beginTransaction();
+        try {
+            foreach ($itemsPayload as $item) {
+                // basic validation per item
+                $validator = \Illuminate\Support\Facades\Validator::make($item, [
+                    'item_name' => ['required', 'string'],
+                    'quantity' => ['required', 'numeric', 'min:1'],
+                    'from' => ['required', 'in:stores,return stores'],
+                    'serialNumbers' => ['nullable', 'array'],
+                    'serialNumbers.*' => ['string']
                 ]);
-                //get the recent created item
-                $item = EmergencyRequisitionItem::where('item_name', $validated['item_description'])
-                    ->where('emergency_requisition_id', $request->requisition_id)
+
+                if ($validator->fails()) {
+                    throw new \Exception('Validation failed for one of the items: ' . implode(', ', $validator->errors()->all()));
+                }
+
+                $itemName = $item['item_name'];
+                $quantity = (int) $item['quantity'];
+                $from = $item['from'];
+                $serials = $item['serialNumbers'] ?? [];
+                $willReturn = isset($item['will_return']) && ($item['will_return'] === 'on' || $item['will_return'] === true || $item['will_return'] === 1) ? 1 : 0;
+
+                // check duplicates against existing items in this requisition
+                $existing = EmergencyRequisitionItem::where('item_name', $itemName)
+                    ->where('emergency_requisition_id', $requisitionId)
                     ->first();
+                if ($existing) {
+                    throw new \Exception("Item {$itemName} is already stored in this emergency requisition.");
+                }
 
-                foreach ($validated['serialNumbers'] as $serial) {
+                if ($from === 'stores') {
+                    $storeItem = Store::where('item_name', $itemName)->first();
+                    if (!$storeItem) {
+                        throw new \Exception("{$itemName} is not available in stores");
+                    }
 
-                    //add the serial numbers to the item
-                    EmergencyRequisitionItemSerial::create([
-                        'item_id' => $item->id,
-                        'serial_number' => $serial
+                    $balance = $storeItem->quantity - $quantity;
+                    if ($balance < 0) {
+                        throw new \Exception("The requested quantity for {$itemName} is more than what is available in stores. Current quantity: {$storeItem->quantity}");
+                    }
+
+                    // create emergency item
+                    $newItem = EmergencyRequisitionItem::create([
+                        'emergency_requisition_id' => $requisitionId,
+                        'item_name' => $itemName,
+                        'quantity' => $quantity,
+                        'from' => $from,
+                        'same_to_return' => $willReturn,
                     ]);
 
-                    //remove the serial numbers from return stores
-                    ReturnsStoreSerialNumber::where('serial_numbers', $serial)->delete();
-                }
-                //if resultant quantity is zero, delete the item
-                if ($balance == 0) {
-                    $item->delete();
-                }
-            } else {
-                //create the item
-                EmergencyRequisitionItem::create([
-                    'emergency_requisition_id' => $request->requisition_id,
-                    'item_name' => $validated['item_description'],
-                    'quantity' => $validated['quantity'],
-                    'from' => $validated['from'],
-                    'same_to_return' => $request->will_return === 'on' ? 1 : 0,
+                    // store serials if provided
+                    foreach ($serials as $s) {
+                        EmergencyRequisitionItemSerial::create([
+                            'item_id' => $newItem->id,
+                            'serial_number' => $s
+                        ]);
+                    }
 
-                ]);
-                //update the quantity in return stores
-                $item->save();
-                //if resultant quantity is zero, delete the item
-                if ($balance == 0) {
-                    $item->delete();
+                    // deduct from stores
+                    $storeItem->update(['quantity' => $balance]);
+                } else { // return stores
+                    $returnItem = ReturnsStore::where('item_name', $itemName)->first();
+                    if (!$returnItem) {
+                        throw new \Exception("{$itemName} is not available in return stores");
+                    }
+
+                    $balance = $returnItem->quantity - $quantity;
+                    if ($balance < 0) {
+                        throw new \Exception("The requested quantity for {$itemName} is more than what is available in return stores. Current quantity: {$returnItem->quantity}");
+                    }
+
+                    // If serials provided, ensure they exist
+                    if (!empty($serials)) {
+                        $serial_numbers = ReturnsStoreSerialNumber::where('returns_store_id', $returnItem->id)
+                            ->pluck('serial_numbers')
+                            ->toArray();
+
+                        if (!empty(array_diff($serials, $serial_numbers))) {
+                            throw new \Exception('The serial number(s) do not match those in return stores for ' . $itemName);
+                        }
+                    }
+
+                    // update return store quantity
+                    $returnItem->quantity = $balance;
+                    $returnItem->save();
+
+                    // create emergency item
+                    $newItem = EmergencyRequisitionItem::create([
+                        'emergency_requisition_id' => $requisitionId,
+                        'item_name' => $itemName,
+                        'quantity' => $quantity,
+                        'from' => $from,
+                        'same_to_return' => $willReturn,
+                    ]);
+
+                    // store serials and remove from return store serials
+                    foreach ($serials as $s) {
+                        EmergencyRequisitionItemSerial::create([
+                            'item_id' => $newItem->id,
+                            'serial_number' => $s
+                        ]);
+
+                        ReturnsStoreSerialNumber::where('serial_numbers', $s)->delete();
+                    }
+
+                    if ($balance == 0) {
+                        $returnItem->delete();
+                    }
                 }
             }
-        }
 
-        return redirect()
-            ->route('emergencyItemsIndex', $request->requisition_id)
-            ->with('success', 'Item added successfully');
+            DB::commit();
+
+            return redirect()
+                ->route('emergencyItemsIndex', $requisitionId)
+                ->with('success', 'All items added successfully');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', $e->getMessage())->withInput();
+        }
     }
 }
