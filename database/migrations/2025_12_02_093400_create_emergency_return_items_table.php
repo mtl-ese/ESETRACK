@@ -1,6 +1,5 @@
 <?php
 
-use App\Models\ReturnsStore;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -12,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('returns_store_serial_numbers', function (Blueprint $table) {
+        Schema::create('emergency_return_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignIdFor(ReturnsStore::class)->constrained()->cascadeOnDelete();
-            $table->string('serial_numbers');
             $table->timestamps();
         });
     }
@@ -25,6 +22,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('returns_store_serial_numbers');
+        Schema::dropIfExists('emergency_return_items');
     }
 };

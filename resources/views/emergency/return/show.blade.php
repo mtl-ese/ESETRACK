@@ -5,6 +5,12 @@
             @csrf
             <input type="text" class="form-control" id="requisitionId" name="requisition_id"
                 placeholder="Enter Requisition ID" value="{{ $identity->requisition_id }}" required readonly hidden>
+            {{-- Keep supplied return_date so confirm uses it instead of now() --}}
+            <input type="hidden" name="return_date" value="{{ $return_date ?? now()->toDateString() }}">
+            <div class="mb-3">
+                <label class="form-label"><strong>Return Date</strong></label>
+                <div class="p-2 bg-white border rounded">{{ $return_date ?? now()->toDateString() }}</div>
+            </div>
             @php
             $number = 1;
             @endphp
