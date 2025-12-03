@@ -12,6 +12,7 @@
         <div class="mb-4">
             <label for="requisition_select" class="form-label"><strong>Reference Store Requisition</strong></label>
             <div class="input-group">
+                @php $hasRequisitions = count($requisitions ?? []) > 0; @endphp
                 <input type="text" class="form-control" id="requisition_select" name="requisition_id" 
                        list="requisitions-list" placeholder="Select or enter requisition ID..." 
                        autocomplete="off" value="{{ old('store_requisition_id') }}">
@@ -37,6 +38,9 @@
                 <button class="btn btn-primary" type="button" id="load_materials">Load Materials</button>
             </div>
         </div>
+        @if(!$hasRequisitions)
+            <div class="mt-2 alert alert-info">There are no recovery requisitions yet.</div>
+        @endif
 
         <!-- Materials Table (Hidden initially) -->
         <div id="materials_section" style="display: none;">
@@ -112,8 +116,18 @@
         });
 
         document.getElementById('load_materials').addEventListener('click', function() {
-            const requisitionId = document.getElementById('requisition_select').value;
-            if (!requisitionId) { alert('Please select a requisition first'); return; }
+            const requisitionInput = document.getElementById('requisition_select');
+            const requisitionId = requisitionInput.value;
+            const datalist = document.getElementById('requisitions-list');
+
+            if (!requisitionId) {
+                if (datalist && datalist.options.length === 0) {
+                    alert('There are no recovery requisitions yet');
+                    return;
+                }
+                alert('Please select a requisition first');
+                return;
+            }
             loadMaterialsForRequisition(requisitionId);
         });
 

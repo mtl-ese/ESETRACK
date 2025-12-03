@@ -61,7 +61,6 @@ class EmergencyRequisitionController extends Controller
             'department' => $validated['department'],
             'created_by' => $user->id,
             'requested_on' => $validated['requisition_date'],
-            'returned_on' => null
         ]);
 
         return redirect()
@@ -85,7 +84,7 @@ class EmergencyRequisitionController extends Controller
 
     public function destroy($requisition_id)
     {
-        $emergency = EmergencyRequisition::with(['items.serial_numbers', 'return'])
+        $emergency = EmergencyRequisition::with(['items.serial_numbers', 'returns'])
             ->where('requisition_id', $requisition_id)
             ->first();
 
@@ -95,13 +94,6 @@ class EmergencyRequisitionController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Emergency requisition not found');
-        }
-
-        //check if it is returned
-        if ($emergency->returned_on) {
-            return redirect()
-                ->back()
-                ->with('error', 'Sorry, Emergency requisition already returned');
         }
 
         //restore its items and their serial numbers
@@ -149,10 +141,16 @@ class EmergencyRequisitionController extends Controller
 
         $items = $requisition->items()->with('serial_numbers')->get();
 
+        // provide store lists so edit page can reuse the datalist/filtering UI from the create flow
+        $stores = Store::select('id', 'item_name')->distinct()->orderBy('item_name')->get();
+        $returnsStores = ReturnsStore::select('id', 'item_name')->distinct()->orderBy('item_name')->get();
+
         return view('emergency.edit', [
             'requisition' => $requisition,
             'requisition_id' => $requisition_id,
-            'items' => $items
+            'items' => $items,
+            'stores' => $stores,
+            'returnsStores' => $returnsStores,
         ]);
     }
 
@@ -454,6 +452,7 @@ class EmergencyRequisitionController extends Controller
                     'quantity' => (int) $item->quantity,
                     'from' => strtolower($item->from), // normalize
                     'serials' => $serials,
+                    'same_to_return' => (int) ($item->same_to_return ?? 0),
                 ];
             }
 
@@ -469,7 +468,8 @@ class EmergencyRequisitionController extends Controller
                     'item_name' => $it['item_name'],
                     'quantity' => (int) ($it['quantity'] ?? 0),
                     'from' => strtolower($it['from'] ?? 'stores'),
-                    'serials' => $s
+                    'serials' => $s,
+                    'same_to_return' => (int) (($it['same_to_return'] ?? ($it['will_return'] ?? false)) ? 1 : 0),
                 ];
             }
 
@@ -496,7 +496,7 @@ class EmergencyRequisitionController extends Controller
         */
 
         try {
-            \DB::transaction(function () use ($validated, $request, $requisition) {
+            \DB::transaction(function () use ($validated, $request, $requisition, $requisition_id) {
 
                 // Update header
                 $requisition->update([
@@ -559,6 +559,8 @@ class EmergencyRequisitionController extends Controller
                             }
 
                             $existing->quantity = $qty;
+                            // Update balance (balance = quantity - returned_quantity)
+                            $existing->balance = max($qty - ($existing->returned_quantity ?? 0), 0);
                             $existing->save();
                         }
 
@@ -609,6 +611,10 @@ class EmergencyRequisitionController extends Controller
                             }
                         }
 
+                        // persist same_to_return flag if provided
+                        $existing->same_to_return = (int) (($entry['same_to_return'] ?? ($entry['will_return'] ?? false)) ? 1 : 0);
+                        $existing->save();
+
                         continue;
                     }
 
@@ -644,11 +650,13 @@ class EmergencyRequisitionController extends Controller
                     }
 
                     $created = \App\Models\EmergencyRequisitionItem::create([
-                        'emergency_requisition_id' => $requisition->id,
+                        'emergency_requisition_id' => $requisition_id,
                         'item_name' => $name,
                         'quantity' => $qty,
                         'from' => $from,
-                        'same_to_return' => 0,
+                        'same_to_return' => (int) (($entry['same_to_return'] ?? ($entry['will_return'] ?? false)) ? 1 : 0),
+                        'returned_quantity' => 0,
+                        'balance' => $qty,
                     ]);
 
                     // attach serials

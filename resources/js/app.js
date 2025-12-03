@@ -32,7 +32,7 @@ $(document).ready(function () {
     $('#example1').each(function () {
         const tableTitle = $(this).data('title') || 'Data Export';
         const currentPath = window.location.pathname;
-        const materialsPaths = ['/store', '/purchase', '/returns', '/emergency', '/recovery', '/acquired'];
+        const materialsPaths = ['/store', '/purchase', '/returns', '/emergency', '/recovery', '/acquired', '/emergency/return'];
         const shouldShowMaterialsButton = materialsPaths.some(path => currentPath === path);
 
         const buttons = [
@@ -203,10 +203,13 @@ $(document).ready(function () {
                         '/emergency': '/emergency/materials',
                         '/recovery': '/recovery/materials',
                         '/acquired': '/acquired/materials',
-                        '/returns': '/returns/materials'
+                        '/returns': '/returns/materials',
+                        '/emergency/return': '/emergency/return/materials'
                     };
                     const path = window.location.pathname;
-                    for (const key in redirectMap) {
+                    // Prefer more specific routes first (longer keys), so '/emergency/return' wins over '/emergency'
+                    const keys = Object.keys(redirectMap).sort((a, b) => b.length - a.length);
+                    for (const key of keys) {
                         if (path === key || path.startsWith(`${key}/`)) {
                             window.location.href = redirectMap[key];
                             return;

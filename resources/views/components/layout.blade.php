@@ -256,8 +256,8 @@
                             title="create a new emergency requisition">Emergency</x-nav-link>
                     </li>
                     <li>
-                        <x-nav-link :active="request()->routeIs('emergencyReturnCreate')"
-                            href="{{ route('emergencyReturnCreate') }}" class="dropdown-item"
+                        <x-nav-link :active="request()->routeIs('emergency.return.create')"
+                            href="{{ route('emergency.return.create') }}" class="dropdown-item"
                             title="create a new emergency return">Emergency Return</x-nav-link>
                     </li>
                 </ul>

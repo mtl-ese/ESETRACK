@@ -31,6 +31,9 @@
                                     <th style="color: white; background-color: #001f3f;">Item Description</th>
                                     <th style="color: white; background-color: #001f3f;">Quantity</th>
                                     <th style="color: white; background-color: #001f3f;">Serial Number(s)</th>
+                                    <th style="color: white; background-color: #001f3f;">Return Same</th>
+                                    <th style="color: white; background-color: #001f3f;">Returned Quantity</th>
+                                    <th class="text-dark" style="background-color: rgb(255, 174, 0)">Balance</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -50,6 +53,9 @@
                                             N/A
                                         @endif
                                     </td>
+                                     <td class="fw-bold">{{ $item->same_to_return? 'Yes': 'No' }}</td>
+                                    <td class="fw-bold">{{ $item->returned_quantity ?? 0 }}</td>
+                                    <td class="fw-bold" style="background-color: rgb(255, 174, 0)">{{ $item->balance ?? ($item->quantity - ($item->returned_quantity ?? 0)) }}</td>
                                 </tr>
                                 @endforeach
                             </tbody>

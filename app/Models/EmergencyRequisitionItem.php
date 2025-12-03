@@ -12,6 +12,8 @@ class EmergencyRequisitionItem extends Model
         'quantity',
         'from',
         'same_to_return',
+        'returned_quantity',
+        'balance'
     ];
 
     public function requisition()
@@ -23,4 +25,9 @@ class EmergencyRequisitionItem extends Model
     {
         return $this->hasMany(EmergencyRequisitionItemSerial::class, 'item_id');
     }
+
+    protected $casts = [
+        'quantity' => 'integer',
+        'returned_quantity' => 'integer',
+    ];
 }

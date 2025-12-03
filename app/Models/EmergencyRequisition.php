@@ -5,6 +5,15 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
+/**
+ * @property string $requisition_id
+ * @property string $initiator
+ * @property string $department
+ * @property int|null $created_by
+ * @property string|null $approved_by
+ * @property \Illuminate\Support\Carbon|null $requested_on
+ * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\EmergencyRequisitionItem[] $items
+ */
 class EmergencyRequisition extends Model
 {
     protected $primaryKey = 'requisition_id'; // Specify custom primary key
@@ -17,14 +26,12 @@ class EmergencyRequisition extends Model
         'created_by',
         'approved_by',
         'requested_on',
-        'returned_on'
     ];
 
     protected function casts(): array
     {
         return [
             'requested_on' => 'date',
-            'returned_on' => 'datetime',
         ];
     }
 
@@ -39,9 +46,9 @@ class EmergencyRequisition extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function return()
+    public function returns()
     {
-        return $this->hasOne(EmergencyReturn::class, 'emergency_requisition_id', 'requisition_id');
+        return $this->hasMany(EmergencyReturn::class, 'emergency_requisition_id', 'requisition_id');
     }
 
 }

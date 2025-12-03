@@ -37,7 +37,6 @@
                                     <th style="color: white; background-color: #001f3f;">Created By</th>
                                     <th style="color: white; background-color: #001f3f;">Requested On</th>
                                     <th style="color: white; background-color: #001f3f;">Approved By</th>
-                                    <th style="color: white; background-color: #001f3f;">Returned On</th>
                                     <th style="color: white; background-color: #001f3f;" class="no-export">Action</th>
                                 </tr>
                             </thead>
@@ -52,13 +51,6 @@
                                     <td class="text-decoration-none fw-bold" style="color: #007bff">{{ $emergency->creator->first_name }} {{ $emergency->creator->last_name }}</td>
                                     <td class="text-decoration-none fw-bold" style="color: #007bff">{{ \Carbon\Carbon::parse($emergency->requested_on)->format('d-M-Y') }}</td>
                                     <td class="text-decoration-none fw-bold" style="color: #007bff">{{ $emergency->approved_by }}</td>
-                                    <td class="text-decoration-none fw-bold" style="color: #007bff">
-                                            @if ($emergency->returned_on == null)
-                                            Not yet returned
-                                            @else
-                                            {{ \Carbon\Carbon::parse($emergency->returned_on)->format('d-M-Y') }}
-                                            @endif
-                                    </td>
 
                                     <td class="text-center">
                                        <!-- View Button -->

@@ -8,7 +8,8 @@ class EmergencyRequisitionItemSerial extends Model
 {
     protected $fillable = [
         'item_id',
-        'serial_number'
+        'serial_number',
+        'returned'
     ];
 
     public function item()
@@ -16,4 +17,9 @@ class EmergencyRequisitionItemSerial extends Model
         return $this
             ->belongsTo(EmergencyRequisitionItem::class, 'item_id', 'id');
     }
+
+    protected $casts = [
+        'returned' => 'boolean',
+    ];
 }
+

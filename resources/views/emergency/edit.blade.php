@@ -2,6 +2,24 @@
     <x-success></x-success>
     <x-error></x-error>
     <x-error-any></x-error-any>
+    <style>
+    .custom-checkbox {
+        width: 20px;
+        height: 20px;
+        margin-left: 10px;
+        cursor: pointer;
+    }
+    .form-check {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 1rem;
+    }
+    .form-check .form-label {
+        margin: 0; 
+        line-height: 5;
+    }
+    </style>
 
     <div class="card p-5 bg-light bg-opacity-50">
         <div class="text-center">
@@ -41,26 +59,37 @@
 
             <h4 class="mt-4 mb-3">Materials</h4>
 
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    <input type="text" class="form-control" id="item" placeholder="Item description">
-                </div>
-                <div class="col-md-2">
-                    <input type="number" class="form-control" id="quantity" placeholder="Quantity">
-                </div>
-                <div class="col-md-2">
+            <div class="row ali">
+                <div class="col-12 col-md-4 mb-3">
+                    <label class="form-label"><strong>From</strong></label>
                     <select id="from" class="form-control">
+                        <option>Select source</option>
                         <option value="stores">Stores</option>
                         <option value="return stores">Return Stores</option>
                     </select>
                 </div>
-                <div class="col-md-2">
-                    <div class="form-check d-flex align-items-center mx">
-                        <label class="form-check-label"><strong>Has Serial Numbers</strong></label>
-                        <input type="checkbox" class="form-check-input ml-2" id="serialnumber" style="width: 28px; height: 28px; margin-left: 8px;">
-                    </div>
+
+                <div class="col-12 col-md-4 mb-3">
+                    <label class="form-label"><strong>Item description</strong></label>
+                    <input type="text" class="form-control" id="item" placeholder="Item description" list="materials-list">
                 </div>
-                <div class="col-md-2">
+
+                <div class="col-12 col-md-2 mb-3">
+                    <label class="form-label"><strong>Quantity</strong></label>
+                    <input type="number" class="form-control" id="quantity" placeholder="Quantity">
+                </div>
+
+                <div class="col-12 col-md-3 mb-3 d-flex align-items-center">
+                    <label class="form-check-label mb-0 me-2"><strong>Serial Number?</strong></label>
+                    <input type="checkbox" class="custom-checkbox" id="serialnumber">
+                </div>
+
+                <div class="col-12 col-md-3 mb-3 d-flex align-items-center">
+                    <label class="form-check-label fw-bold">Same item(s) will be returned</label>
+                    <input type="checkbox" class="custom-checkbox" id="will_return" name="will_return">
+                </div>
+
+                <div class="col-12 col-md-1 mb-3 d-flex align-items-center">
                     <button type="button" class="btn btn-primary" id="addItemBtn">Add</button>
                 </div>
             </div>
@@ -76,6 +105,7 @@
                             <th>Quantity</th>
                             <th>From</th>
                             <th>Serial Numbers</th>
+                            <th>Same To Return</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -93,23 +123,60 @@
         </form>
     </div>
 
-    @php
-        $itemsData = $items->map(function ($item) {
-            $serialNumbers = $item->serial_numbers->pluck('serial_number')->filter()->values()->all();
+        @php
+            $itemsData = $items->map(function ($item) {
+                $serialNumbers = $item->serial_numbers->pluck('serial_number')->filter()->values()->all();
 
-            return [
-                'id' => $item->id,
-                'item_name' => $item->item_name,
-                'quantity' => $item->quantity,
-                'from' => $item->from,
-                'serialNumbers' => $serialNumbers,
-            ];
-        });
-    @endphp
+                return [
+                    'id' => $item->id,
+                    'item_name' => $item->item_name,
+                    'quantity' => $item->quantity,
+                    'from' => $item->from,
+                    'same_to_return' => (int) ($item->same_to_return ?? 0),
+                    'serialNumbers' => $serialNumbers,
+                ];
+            });
+        @endphp
 
     <script>
     document.addEventListener('DOMContentLoaded', function () {
         let items = @json($itemsData);
+        // Build datalist options from server-provided collections
+        const storeOptions = [
+            @foreach(($stores ?? collect()) as $store)
+                '{{ addslashes($store->item_name) }}',
+            @endforeach
+        ];
+
+        const returnOptions = [
+            @foreach(($returnsStores ?? collect()) as $rs)
+                '{{ addslashes($rs->item_name) }}',
+            @endforeach
+        ];
+
+        // prepare datalist element for suggestions
+        const datalistId = 'materials-list';
+        let datalistEl = document.getElementById(datalistId);
+        if (!datalistEl) {
+            datalistEl = document.createElement('datalist');
+            datalistEl.id = datalistId;
+            document.body.appendChild(datalistEl);
+        }
+
+        // initialize combined options
+        let originalOptions = [...storeOptions, ...returnOptions];
+
+        function resetDatalist(options) {
+            datalistEl.innerHTML = '';
+            options.forEach(opt => {
+                const optionElement = document.createElement('option');
+                optionElement.value = opt;
+                datalistEl.appendChild(optionElement);
+            });
+        }
+
+        // set initial datalist
+        resetDatalist(originalOptions);
         let deletedItemIds = [];
         let editingIndex = -1;
 
@@ -136,12 +203,42 @@
             }
         }
 
+        // wire up datalist filtering behaviour (similar to create page)
+        itemInput.addEventListener('input', function() {
+            const inputValue = this.value.toLowerCase();
+            const currentOptions = Array.from(datalistEl.options).map(opt => opt.value);
+
+            const exactMatches = currentOptions.filter(option => option.toLowerCase().startsWith(inputValue));
+            const partialMatches = currentOptions.filter(option => option.toLowerCase().includes(inputValue) && !option.toLowerCase().startsWith(inputValue));
+
+            datalistEl.innerHTML = '';
+            [...exactMatches, ...partialMatches].forEach(option => {
+                const optionElement = document.createElement('option');
+                optionElement.value = option;
+                datalistEl.appendChild(optionElement);
+            });
+        });
+
+        fromSelect.addEventListener('change', function() {
+            const v = this.value;
+            if (v === 'stores') {
+                resetDatalist(storeOptions);
+            } else if (v === 'return stores') {
+                resetDatalist(returnOptions);
+            } else {
+                resetDatalist([...storeOptions, ...returnOptions]);
+            }
+            // update serial fields in case from changed
+            updateSerialFields();
+        });
+
         function renderItems() {
             itemsBody.innerHTML = '';
             if (items.length === 0) { itemsTable.style.display = 'none'; itemsDataInput.value = JSON.stringify([]); deletedItemsInput.value = JSON.stringify(deletedItemIds); return; }
-            items.forEach((it, idx) => {
+                items.forEach((it, idx) => {
                 const serials = it.serialNumbers?.length ? it.serialNumbers.join(', ') : 'N/A';
-                itemsBody.insertAdjacentHTML('beforeend', `\n                    <tr>\n                        <td>${it.item_name}</td>\n                        <td>${it.quantity}</td>\n                        <td>${it.from || 'N/A'}</td>\n                        <td>${serials}</td>\n                        <td>\n                            <button type=\"button\" class=\"btn btn-sm btn-warning edit-btn\" data-index=\"${idx}\">Edit</button>\n                            <button type=\"button\" class=\"btn btn-sm btn-danger delete-btn\" data-index=\"${idx}\">Remove</button>\n                        </td>\n                    </tr>\n                `);
+                const sameReturn = it.same_to_return || it.will_return || it.sameToReturn ? true : false;
+                itemsBody.insertAdjacentHTML('beforeend', `\n                    <tr>\n                        <td>${it.item_name}</td>\n                        <td>${it.quantity}</td>\n                        <td>${it.from || 'N/A'}</td>\n                        <td>${serials}</td>\n                        <td>${sameReturn ? 'Yes' : 'No'}</td>\n                        <td>\n                            <button type=\"button\" class=\"btn btn-sm btn-warning edit-btn\" data-index=\"${idx}\">Edit</button>\n                            <button type=\"button\" class=\"btn btn-sm btn-danger delete-btn\" data-index=\"${idx}\">Remove</button>\n                        </td>\n                    </tr>\n                `);
             });
             itemsTable.style.display = 'block';
             itemsDataInput.value = JSON.stringify(items);
@@ -175,7 +272,8 @@
                     if (serials.length !== qty) { alert('Please enter all serial numbers'); return; }
                 }
 
-                const obj = { item_name: name, quantity: qty, from: from, serialNumbers: serials.length ? serials : null };
+                const willReturn = document.getElementById('will_return') ? document.getElementById('will_return').checked : false;
+                const obj = { item_name: name, quantity: qty, from: from, same_to_return: willReturn ? 1 : 0, will_return: willReturn, serialNumbers: serials.length ? serials : null };
                 const btn = document.getElementById('addItemBtn');
                 if (editingIndex >= 0) {
                     const existing = items[editingIndex];
@@ -217,6 +315,16 @@
                     serialCheckbox.checked = !!it.serialNumbers?.length;
                     updateSerialFields();
                 }
+
+                // populate the same-to-return checkbox if present on the item
+                try {
+                    const willReturnEl = document.getElementById('will_return');
+                    if (willReturnEl) {
+                        willReturnEl.checked = !!(it.same_to_return || it.will_return || it.sameToReturn);
+                    }
+                } catch (ex) {
+                    // ignore
+                }
                 editingIndex = idx;
                 // switch the inline button into Save state so the user can save their edits
                 const inlineBtn = document.getElementById('addItemBtn');
@@ -231,8 +339,6 @@
                 renderItems();
             }
         });
-
-        // NOTE: the inline Add button (id="addItemBtn") is used; no dynamic fallback created
 
         // wire up serial fields
         serialCheckbox.addEventListener('change', updateSerialFields);

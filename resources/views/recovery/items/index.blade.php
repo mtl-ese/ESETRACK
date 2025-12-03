@@ -26,13 +26,15 @@
                             <table id="example1" class="table table-bordered table-striped table-hover"
                                 data-title="Recovery Store Requisition Items-{{ $requisition_id }} ">
                                 <thead>
-                                    <tr>
-                                        <th style="color: white; background-color: #001f3f;">No.</th>
-                                        <th style="color: white; background-color: #001f3f;">Item Description</th>
-                                        <th style="color: white; background-color: #001f3f;">Quantity</th>
-                                          <th style="color: white; background-color: #001f3f;">Customer Name</th>
-                                        <th style="color: white; background-color: #001f3f;">Serial Number</th>
-                                    </tr>
+                                                                <tr>
+                                                                                <th style="color: white; background-color: #001f3f;">No.</th>
+                                                                                <th style="color: white; background-color: #001f3f;">Item Description</th>
+                                                                                <th style="color: white; background-color: #001f3f;">Quantity</th>
+                                                                                    <th style="color: white; background-color: #001f3f;">Customer Name</th>
+                                                                                <th style="color: white; background-color: #001f3f;">Serial Number</th>
+                                                                                <th style="color: white; background-color: #001f3f;">Returned Quantity</th>
+                                                                                <th class="text-dark" style="background-color: rgb(255, 174, 0)">Balance</th>
+                                                                        </tr>
                                 </thead>
                                 <tbody>
                                     @php
@@ -96,6 +98,8 @@
                                                 @endphp
                                                 {{ !empty($serialNumbers) ? implode(', ', $serialNumbers) : 'N/A' }}
                                             </td>
+                                            <td class="fw-bold">{{ $item->returned_quantity ?? 0 }}</td>
+                                            <td class="fw-bold" style="background-color: rgb(255, 174, 0)">{{ $item->balance ?? ($item->quantity - ($item->returned_quantity ?? 0)) }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

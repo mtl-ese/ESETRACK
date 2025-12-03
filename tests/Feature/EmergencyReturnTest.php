@@ -50,7 +50,7 @@ it('validates return_date and returns validation errors when missing', function 
     $response->assertSessionHasErrors(['return_date']);
 });
 
-it('processes confirmation and creates emergency_return using supplied date', function () {
+it('creates emergency_return with items when submitting warehouse return form', function () {
     $user = User::factory()->create();
 
     // create a requisition with an item (simple item without serials)
@@ -76,12 +76,14 @@ it('processes confirmation and creates emergency_return using supplied date', fu
 
     $response = $this
         ->actingAs($user)
-        ->post('/emergency/return/confirm', [
+        ->post('/emergency/return/store', [
             'requisition_id' => $requisitionId,
+            'approved_by' => 'Approver',
             'return_date' => $date,
+            'quantities' => ['Test Cable' => 2],
         ]);
 
-    $response->assertRedirect(route('dashboard'));
+    $response->assertRedirect(route('return.index'));
 
     // assert emergency_returns has record and requisition returned_on updated
     $this->assertDatabaseHas('emergency_returns', [
@@ -89,8 +91,14 @@ it('processes confirmation and creates emergency_return using supplied date', fu
         'returned_on' => $date,
     ]);
 
-    $this->assertDatabaseHas('emergency_requisitions', [
-        'requisition_id' => $requisitionId,
-        'returned_on' => $date,
+    $this->assertDatabaseHas('emergency_requisition_items', [
+        'emergency_requisition_id' => $requisitionId,
+        'item_name' => 'Test Cable',
+        'returned_quantity' => 2,
+    ]);
+
+    $this->assertDatabaseHas('emergency_return_items', [
+        'item_name' => 'Test Cable',
+        'quantity' => 2,
     ]);
 });

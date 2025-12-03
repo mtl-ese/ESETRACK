@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Acquired;
 use App\Models\EmergencyRequisition;
 use App\Models\PurchaseRequisition;
+use App\Models\EmergencyReturn;
 use App\Models\RecoveryStoreRequisition;
 use App\Models\StoreItem;
 use App\Models\StoreRequisition;
@@ -19,7 +20,8 @@ class DashboardController extends Controller
         $totalPurchaseRequisitions = PurchaseRequisition::count();
         $totalStoreRequisitions = StoreRequisition::count();
         $totalRecoveryRequisitions = RecoveryStoreRequisition::count();
-        $totalReturns = StoreReturn::count();
+        $totalStoreReturns = StoreReturn::count();
+        $totalEmergencyReturns = EmergencyReturn::count();
         $totalEmergencies = EmergencyRequisition::count();
         $totalAcquired = Acquired::count();
 
@@ -29,7 +31,8 @@ class DashboardController extends Controller
         $lastPurchaseUpdated = PurchaseRequisition::latest('updated_at')->first();
         $lastStoreUpdated = StoreRequisition::latest('updated_at')->first();
         $lastRecoveryUpdated = RecoveryStoreRequisition::latest('updated_at')->first();
-        $lastReturnsUpdated = StoreReturn::latest('updated_at')->first();
+        $lastStoreReturnsUpdated = StoreReturn::latest('updated_at')->first();
+        $lastEmergencyReturnsUpdated = EmergencyReturn::latest('updated_at')->first();
         $lastEmergenciesUpdated = EmergencyRequisition::latest('updated_at')->first();
         $lastAcquiredUpdated = Acquired::latest('updated_at')->first();
 
@@ -39,17 +42,19 @@ class DashboardController extends Controller
             'purchase' => $totalPurchaseRequisitions,
             'store' => $totalStoreRequisitions,
             'recovery' => $totalRecoveryRequisitions,
-            'return' => $totalReturns,
+            'storeReturn' => $totalStoreReturns,
+            'emergencyReturn' => $totalEmergencyReturns,
             'emergency' => $totalEmergencies,
             'acquired' => $totalAcquired,
 
             'lastPurchaseUpdated' => $lastPurchaseUpdated,
             'lastStoreUpdated' => $lastStoreUpdated,
             'lastRecoveryUpdated' => $lastRecoveryUpdated,
-            'lastReturnUpdated' => $lastReturnsUpdated,
+            'lastStoreReturnUpdated' => $lastStoreReturnsUpdated,
+            'lastEmergencyReturnUpdated' => $lastEmergencyReturnsUpdated,
             'lastEmergencyUpdated' => $lastEmergenciesUpdated,
             'lastAcquiredUpdated' => $lastAcquiredUpdated,
-            
+
             'users' => $users
 
         ]);

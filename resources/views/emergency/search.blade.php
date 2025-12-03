@@ -49,13 +49,6 @@
                             <td><a href="{{ route('emergencyItemsIndex', $emergency->requisition_id) }}">{{ $emergency->creator->first_name }} {{ $emergency->creator->last_name }}</a></td>
                             <td><a href="{{ route('emergencyItemsIndex', $emergency->requisition_id) }}">{{ \Carbon\Carbon::parse($emergency->created_at)->format('d M Y') }}</a></td>
                             <td><a href="{{ route('emergencyItemsIndex', $emergency->requisition_id) }}">{{ $emergency->approved_by }}</a></td>
-                            <td><a href="{{ route('emergencyItemsIndex', $emergency->requisition_id) }}">
-                                @if ($emergency->returned_on == null)
-                                    Not yet returned
-                                @else
-                                    {{ \Carbon\Carbon::parse($emergency->returned_on)->format('d M Y') }}
-                                @endif
-                            </a></td>
                             <td class="text-center">
                                 <form id="delete-form-{{ $emergency->requisition_id }}"
                                     action="{{ route('emergencyDestroy', $emergency->requisition_id) }}" method="POST">

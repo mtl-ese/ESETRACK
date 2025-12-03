@@ -6,7 +6,7 @@
 
     <div class="row">
         <!-- Total Purchase Requisitions Card -->
-        <x-card style="background-color:rgb(114, 75, 117);">
+        <x-card style="background-color:rgb(43, 143, 158)">
             <x-card-body>
                 <a href="{{ route('purchase.index') }}" class="text-decoration-none text-black">
                     <x-card-title>
@@ -27,7 +27,28 @@
             </x-card-body>
         </x-card>
 
-        <x-card class=" bg-success">
+         <x-card class="bg-success">
+            <x-card-body>
+                <a href="{{ route('acquired.index') }}" class="text-decoration-none text-black">
+                    <x-card-title>
+                        <i class="fas fa-check-circle navbar navbar-brand rounded-5 mx-auto bg-transparent d-block"
+                            style="max-height: 40px;"></i>
+                        Total Acquired Requisitions
+                    </x-card-title>
+                    <x-card-text>{{ $acquired }}</x-card-text>
+                    <p class="card-footer text-body-primary">
+                        Last requisition:
+                        @if ($lastAcquiredUpdated)
+                            {{ $lastAcquiredUpdated->updated_at->diffForHumans() }}
+                        @else
+                            No records
+                        @endif
+                    </p>
+                </a>
+            </x-card-body>
+        </x-card>
+
+        <x-card style="background-color:rgb(182, 113, 187);">
             <x-card-body>
                 <a href="{{ route('store.index') }}" class="text-decoration-none text-black">
                     <x-card-title>
@@ -48,7 +69,7 @@
             </x-card-body>
         </x-card>
 
-        <x-card class="bg-warning" style="max-height: 230px;">
+        <x-card  style="background-color:rgb(93, 218, 79); max-height: 230px;">
             <x-card-body>
                 <a href="{{ route('recovery.index') }}" class="text-decoration-none text-black">
                     <x-card-title>
@@ -69,19 +90,19 @@
             </x-card-body>
         </x-card>
 
-        <x-card class=" bg-secondary bg-opacity">
+        <x-card class="bg-opacity" style="background-color:gray;">
             <x-card-body>
                 <a href="{{ route('returns.index') }}" class="text-decoration-none text-black">
                     <x-card-title>
                         <i class="fas fa-undo-alt navbar navbar-brand rounded-5 mx-auto bg-transparent d-block"
                             style="max-height: 40px;"></i>
-                        Total Returns
+                        Total Store Returns
                     </x-card-title>
-                    <x-card-text>{{ $return }}</x-card-text>
+                    <x-card-text>{{ $storeReturn }}</x-card-text>
                     <p class="card-footer text-body-primary">
                         Last return:
-                        @if ($lastReturnUpdated)
-                            {{ $lastReturnUpdated->updated_at->diffForHumans() }}
+                        @if ($lastStoreReturnUpdated)
+                            {{ $lastStoreReturnUpdated->updated_at->diffForHumans() }}
                         @else
                             No records
                         @endif
@@ -90,7 +111,7 @@
             </x-card-body>
         </x-card>
 
-        <x-card class="bg-primary">
+        <x-card style="background-color: rgb(214, 57, 57)" class="bg-opacity">
             <x-card-body>
                 <a href="{{ route('emergencyIndex') }}" class="text-decoration-none text-black">
                     <x-card-title>
@@ -110,19 +131,19 @@
             </x-card-body>
         </x-card>
 
-        <x-card style="background-color:rgb(201, 45, 71);">
+        <x-card style="background-color: orange">
             <x-card-body>
-                <a href="{{ route('acquired.index') }}" class="text-decoration-none text-black">
+                <a href="{{ route('emergency.return.index') }}" class="text-decoration-none text-black">
                     <x-card-title>
-                        <i class="fas fa-check-circle navbar navbar-brand rounded-5 mx-auto bg-transparent d-block"
+                        <i class="fas fa-exclamation-circle navbar navbar-brand rounded-5 mx-auto bg-transparent d-block"
                             style="max-height: 40px;"></i>
-                        Total Acquired Requisitions
+                        Total Emergency Returns
                     </x-card-title>
-                    <x-card-text>{{ $acquired }}</x-card-text>
+                    <x-card-text>{{ $emergencyReturn }}</x-card-text>
                     <p class="card-footer text-body-primary">
-                        Last requisition:
-                        @if ($lastAcquiredUpdated)
-                            {{ $lastAcquiredUpdated->updated_at->diffForHumans() }}
+                        Last return:
+                        @if ($lastEmergencyReturnUpdated)
+                            {{ $lastEmergencyReturnUpdated->updated_at->diffForHumans() }}
                         @else
                             No records
                         @endif
@@ -130,6 +151,7 @@
                 </a>
             </x-card-body>
         </x-card>
+
     </div>
 
     <div class="row mt-4"> <!-- Added margin-top for spacing -->
@@ -186,7 +208,8 @@
             var purchase = parseInt('{{ $purchase }}', 10) || 0;
             var store = parseInt('{{ $store }}', 10) || 0;
             var recovery = parseInt('{{ $recovery }}', 10) || 0;
-            var returnReq = parseInt('{{ $return }}', 10) || 0;
+            var storeReturn = parseInt('{{ $storeReturn }}', 10) || 0;
+            var emergencyReturn = parseInt('{{ $emergencyReturn }}', 10) || 0;
             var emergency = parseInt('{{ $emergency }}', 10) || 0;
             var acquired = parseInt('{{ $acquired }}', 10) || 0;
 
@@ -194,13 +217,14 @@
                 'Purchase Requisitions',
                 'Store Requisitions',
                 'Recovery Requisitions',
-                'Returns',
+                'Store Returns',
+                'Emergency Returns',
                 'Emergency Requisitions',
                 'Acquired Requisitions'
             ];
 
-            var dataValues = [purchase, store, recovery, returnReq, emergency, acquired];
-            var backgroundColors = ['#724B75', '#198754', '#ffc107', '#6c757d', '#0d6efd', '#c92a47'];
+            var dataValues = [purchase, store, recovery, storeReturn, emergencyReturn, emergency, acquired];
+            var backgroundColors = ['#2B8F9E', '#996699', '#5DDA4F', '#808080', '#FFA500', '#D63939', '#28a745'];
 
             // Pie Chart
             var pieChartCanvas = $('#myPieChart').get(0).getContext('2d');

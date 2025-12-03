@@ -7,6 +7,7 @@ use App\Http\Controllers\EmergencyRequisitionController;
 use App\Http\Controllers\EmergencyRequisitionItemController;
 use App\Http\Controllers\EmergencyRequisitionItemSerialController;
 use App\Http\Controllers\EmergencyReturnController;
+use App\Http\Controllers\EmergencyReturnItemController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchaseItemController;
@@ -476,17 +477,48 @@ Route::get('/emergency/item/serials/{item_id}', [EmergencyRequisitionItemSerialC
 
 
 //emergency return routes
+Route::get('/emergency/return', [EmergencyReturnController::class, 'index'])
+    ->name('emergency.return.index')
+    ->middleware(['auth', 'prevent.back.history']);
+
 Route::get('/emergency/return/create', [EmergencyReturnController::class, 'create'])
-    ->name('emergencyReturnCreate')
+    ->name('emergency.return.create')
     ->middleware(['auth', 'prevent.back.history']);
 
 Route::post('/emergency/return/store', [EmergencyReturnController::class, 'store'])
-    ->name('emergencyReturnStore')
+    ->name('emergency.return.store')
     ->middleware(['auth', 'prevent.back.history']);
 
-Route::post('/emergency/return/confirm/', [EmergencyReturnController::class, 'confirm'])
-    ->name('emergencyReturnConfirm')
+Route::post('/emergency/return/search', [EmergencyReturnController::class, 'search'])
+    ->name('emergency.return.search')
     ->middleware(['auth', 'prevent.back.history']);
+
+Route::get('/emergency/return/load-materials/{requisitionId}', [EmergencyReturnController::class, 'loadMaterials'])
+    ->name('emergency.return.loadMaterials')
+    ->middleware(['auth', 'prevent.back.history']);
+
+// Materials route for emergency return materials
+Route::get('/emergency/return/materials', [EmergencyReturnItemController::class, 'materialsIndex'])
+    ->name('emergency.return.materials.index')
+    ->middleware(['auth', 'prevent.back.history']);
+
+Route::get('/emergency/return/edit/{requisitionId}', [EmergencyReturnController::class, 'editForm'])
+    ->name('emergency.return.edit-form')
+    ->middleware(['auth', 'prevent.back.history', 'isAdmin']);
+
+Route::post('/emergency/return/update/{requisitionId}', [EmergencyReturnController::class, 'updateAll'])
+    ->name('emergency.return.update-all')
+    ->middleware(['auth', 'prevent.back.history', 'isAdmin']);
+
+Route::post('/emergency/return/destroy/{requisition_id}', [EmergencyReturnController::class, 'destroy'])
+    ->name('emergency.return.destroy')
+    ->middleware(['auth', 'prevent.back.history', 'isAdmin']);
+
+// Emergency return items routes
+Route::prefix('emergency/return/items')->name('emergency.return.items.')->middleware(['auth', 'prevent.back.history'])->group(function () {
+    Route::get('{emergency_return_id}/{requisition_id}', [EmergencyReturnItemController::class, 'index'])
+        ->name('index');
+});
 
 //return stores routes
 

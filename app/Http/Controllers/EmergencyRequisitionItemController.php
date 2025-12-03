@@ -73,7 +73,7 @@ class EmergencyRequisitionItemController extends Controller
                 'quantity' => $request->input('quantity'),
                 'from' => $request->input('from'),
                 'serialNumbers' => $request->input('serialNumbers') ?? [],
-                'will_return' => $request->input('will_return') ?? null,
+                // will_return has been removed; phased-return data is tracked on the item (returned_quantity/balance)
             ];
             $itemsPayload = [$single];
         }
@@ -92,14 +92,22 @@ class EmergencyRequisitionItemController extends Controller
                 ]);
 
                 if ($validator->fails()) {
-                    throw new \Exception('Validation failed for one of the items: ' . implode(', ', $validator->errors()->all()));
+                    $errorDetails = [];
+                    if ($validator->errors()->has('item_name'))
+                        $errorDetails[] = 'Item description is required';
+                    if ($validator->errors()->has('quantity'))
+                        $errorDetails[] = 'Quantity must be a number greater than 0';
+                    if ($validator->errors()->has('from'))
+                        $errorDetails[] = 'From (source) must be either "stores" or "return stores"';
+                    throw new \Exception('Validation failed: ' . implode('; ', $errorDetails));
                 }
 
                 $itemName = $item['item_name'];
                 $quantity = (int) $item['quantity'];
                 $from = $item['from'];
                 $serials = $item['serialNumbers'] ?? [];
-                $willReturn = isset($item['will_return']) && ($item['will_return'] === 'on' || $item['will_return'] === true || $item['will_return'] === 1) ? 1 : 0;
+                // returned_quantity and balance are tracked on items (phased returns) — initialize returned_quantity to 0
+                $willReturn = null; // no longer used
 
                 // check duplicates against existing items in this requisition
                 $existing = EmergencyRequisitionItem::where('item_name', $itemName)
@@ -121,12 +129,14 @@ class EmergencyRequisitionItemController extends Controller
                     }
 
                     // create emergency item
+                    // initialize returned_quantity and balance for phased returns
                     $newItem = EmergencyRequisitionItem::create([
                         'emergency_requisition_id' => $requisitionId,
                         'item_name' => $itemName,
                         'quantity' => $quantity,
                         'from' => $from,
-                        'same_to_return' => $willReturn,
+                        'returned_quantity' => 0,
+                        'balance' => $quantity,
                     ]);
 
                     // store serials if provided
@@ -171,7 +181,8 @@ class EmergencyRequisitionItemController extends Controller
                         'item_name' => $itemName,
                         'quantity' => $quantity,
                         'from' => $from,
-                        'same_to_return' => $willReturn,
+                        'returned_quantity' => 0,
+                        'balance' => $quantity,
                     ]);
 
                     // store serials and remove from return store serials
